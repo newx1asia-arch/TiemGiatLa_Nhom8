@@ -2,9 +2,10 @@
 
 ## Thành viên nhóm
 
-**Nguyễn Tấn Tài** 
-- 2606042030
+**Nguyễn Tấn Tài** - 2606042030
+
 **Nguyễn Công Thái** - 2606042027
+
 **Vũ Gia Phúc** - 2606042026
 ---
 
