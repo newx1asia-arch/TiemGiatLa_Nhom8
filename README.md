@@ -1,72 +1,97 @@
-# Tiệm Giặt Là - Nhóm 8 (Đề tài 16)
+# Đề tài 16: Tiệm giặt là - Nhóm 8
 
-Dự án được xây dựng theo mô hình MVC (Express + Mongoose + Handlebars),
-tham khảo cấu trúc từ dự án ShopVN.
+## Thành viên nhóm
 
-## ✅ Đã hoàn thành: Mục 2.1 - Quản lý khách hàng
-- Đăng ký / Đăng nhập / Đăng xuất (bằng số điện thoại + mật khẩu, mã hoá bcrypt)
-- Xem & chỉnh sửa thông tin cá nhân (họ tên, email, địa chỉ)
-- Đổi mật khẩu
-- Xem điểm tích lũy (field `points` trong model `Customer`)
-- Xem lịch sử giặt (danh sách đơn hàng, có phân trang)
+**Nguyễn Tấn Tài** - 2606042030
+**Nguyễn Công Thái** - 2606042027
+**Vũ Gia Phúc** - 2606042026
+---
 
-## 🗄️ Dùng chung 1 cluster MongoDB Atlas (free) với dự án khác?
-Hoàn toàn được — 1 cluster chứa nhiều database độc lập. Chỉ cần đổi TÊN DATABASE
-ở cuối chuỗi kết nối (`MONGODB_URI`), giữ nguyên user/pass của cluster. Xem chi
-tiết trong `.env.example`.
+# Yêu cầu thực hiện
 
-## 🚀 Cách chạy dự án
+## 1. Quy trình thực hiện
 
-```bash
-npm install
-cp .env.example .env   # rồi điền MONGODB_URI của bạn
-npm run dev             # hoặc: npm start
-```
+Quy trình xử lý đơn hàng của hệ thống:
 
-Truy cập: http://localhost:3000
+**Tiếp nhận → Lập hóa đơn → Thực hiện → Trả đồ**
 
-## 📂 Cấu trúc thư mục
+---
 
-```
-config/db/          -> kết nối MongoDB
-app/models/          -> Customer.js, Order.js (schema Mongoose)
-app/controllers/      -> AuthController.js, CustomerController.js
-app/middlewares/      -> auth.js (requireCustomer)
-routes/               -> auth.js, customer.js, site.js, index.js
-src/index.js          -> khởi tạo server Express
-src/views/             -> giao diện Handlebars (.hbs)
-src/public/css/        -> app.css
-```
+## 2. Chức năng
 
-## 🗺️ Việc cần làm tiếp theo (theo đúng thứ tự đề bài)
+### 2.1. Quản lý khách hàng
 
-### Mục 2.2 - Quản lý đơn hàng / dịch vụ
-- Tạo model `Service` (mã dịch vụ, tên dịch vụ, đơn giá - Giặt/Sấy/Ủi)
-- Mở rộng model `Order` (đã có sẵn khung ở `app/models/Order.js`): thêm mảng
-  `items` (dịch vụ đã chọn + số lượng), field hẹn ngày trả đã có sẵn (`returnDate`)
-- `OrderController`: tạo đơn hàng, in hóa đơn, tạo/in mã vạch (gợi ý dùng thư viện
-  `bwip-js` hoặc `jsbarcode` để sinh mã vạch từ `order.code`)
-- Khi đơn hàng chuyển sang trạng thái `da_giao`, cộng điểm cho khách hàng
-  (`customer.points += Math.floor(order.totalAmount / 10000)` chẳng hạn)
+Lưu thông tin khách hàng.
+Tích điểm cho khách hàng.
+Quản lý lịch sử giặt.
+Đăng nhập / Đăng ký tài khoản.
+### 2.2. Quản lý đơn hàng / dịch vụ
 
-### Mục 2.3 - Quản lý trạng thái xử lý
-- Đây thực chất là field `status` đã có sẵn trong `Order`
-- Làm thêm route `POST /orders/:id/status` để nhân viên cập nhật trạng thái
-  theo đúng luồng: `cho_giat` → `dang_giat` → `da_xong` → `da_giao`
+Tạo đơn hàng.
+Chọn dịch vụ:
+Giặt
+Sấy
+Ủi
+Hẹn ngày trả đồ.
+In hóa đơn.
+Tạo / in mã vạch cho đơn hàng.
+### 2.3. Quản lý trạng thái xử lý
 
-### Mục 2.4 - Quản lý kho vật tư
-- Model mới `Inventory`: tên vật tư, đơn vị tính, số lượng tồn, ngưỡng cảnh báo
-- CRUD nhập/xuất kho (dành cho nhân viên/admin)
+Đơn hàng được xử lý theo các trạng thái:
 
-### Mục 2.5 - Báo cáo / Thống kê
-- Dùng `Order.aggregate()` nhóm theo ngày/tháng để tính doanh thu
-  (tham khảo cách ShopVN dùng aggregate trong `SellerController.js`)
-- Thống kê dịch vụ dùng nhiều nhất: `$unwind` mảng `items` rồi `$group` theo dịch vụ
+**Chờ giặt → Đang giặt → Đã xong → Đã giao**
 
-### Gợi ý chung
-- Vì đề bài có "Thẻ trả trước" (mã thẻ, số dư, trạng thái) nhưng chưa nằm trong
-  mục Chức năng 2.x nào rõ ràng - nên hỏi giảng viên đây thuộc mục nào, hoặc coi
-  nó là 1 phương thức thanh toán trong mục 2.2.
-- Nếu hệ thống cần thêm vai trò "nhân viên" quản lý đơn hàng/kho (khác với khách
-  hàng), nên tạo model `Staff` riêng (giống `role: admin` trong User của ShopVN)
-  thay vì gộp chung với `Customer`.
+### 2.4. Quản lý kho vật tư
+
+Quản lý các vật tư phục vụ hoạt động của tiệm giặt là:
+
+Xà phòng.
+Nước xả.
+Bao bì.
+Các vật tư liên quan khác.
+### 2.5. Báo cáo / Thống kê
+
+Thống kê doanh thu theo ngày.
+Thống kê doanh thu theo tháng.
+Thống kê các dịch vụ được sử dụng nhiều nhất.
+---
+
+# 3. Đối tượng sử dụng
+
+## Khách hàng
+
+Thông tin gồm:
+
+Mã khách hàng
+Họ tên
+Số điện thoại
+Địa chỉ
+## Đơn hàng
+
+Thông tin gồm:
+
+Mã đơn hàng
+Ngày nhận
+Ngày trả
+Trạng thái
+Tổng tiền
+## Dịch vụ giặt
+
+Thông tin gồm:
+
+Mã dịch vụ
+Tên dịch vụ
+Đơn giá
+## Thẻ trả trước
+
+Thông tin gồm:
+
+Mã thẻ
+Số dư
+Trạng thái thẻ
+---
+
+# 4. Mục tiêu
+
+Xây dựng hệ thống quản lý tiệm giặt là giúp quản lý khách hàng, đơn hàng, dịch vụ, kho vật tư và doanh thu một cách thuận tiện, chính xác và dễ sử dụng.
+ Dựa trên yêu cầu thực hiện dự án này
