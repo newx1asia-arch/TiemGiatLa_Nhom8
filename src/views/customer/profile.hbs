@@ -1,0 +1,43 @@
+<h2 class="page-title">Hồ sơ của tôi</h2>
+
+<div class="card">
+    <div class="profile-header">
+        <div class="profile-avatar">{{customer.name.[0]}}</div>
+        <div>
+            <strong style="font-size: 1.1rem;">{{customer.name}}</strong><br>
+            <span class="points-badge">⭐ {{customer.points}} điểm tích lũy</span>
+        </div>
+    </div>
+
+    <div class="profile-info-row">
+        <span class="label">Mã khách hàng</span>
+        <span class="customer-code">{{#if customer.code}}{{customer.code}}{{else}}(chưa có mã){{/if}}</span>
+    </div>
+    <div class="profile-info-row">
+        <span class="label">Số điện thoại</span>
+        <span>{{customer.phone}}</span>
+    </div>
+    <div class="profile-info-row">
+        <span class="label">Email</span>
+        <span>{{#if customer.email}}{{customer.email}}{{else}}Chưa cập nhật{{/if}}</span>
+    </div>
+    <div class="profile-info-row">
+        <span class="label">Địa chỉ</span>
+        <span>{{#if customer.address}}{{customer.address}}{{else}}Chưa cập nhật{{/if}}</span>
+    </div>
+    <div class="profile-info-row">
+        <span class="label">Ngày tham gia</span>
+        <span>{{dateFormat customer.createdAt}}</span>
+    </div>
+    <div class="profile-info-row">
+        <span class="label">Tổng số đơn đã giặt</span>
+        <span>{{orderCount}}</span>
+    </div>
+
+    <div class="action-links">
+        <a href="/me/profile/edit" class="btn">Chỉnh sửa thông tin</a>
+        <a href="/me/change-password" class="btn">Đổi mật khẩu</a>
+        <a href="/me/card" class="btn">Thẻ trả trước</a>
+        <a href="/me/history" class="btn btn-primary">Xem lịch sử giặt</a>
+    </div>
+</div>

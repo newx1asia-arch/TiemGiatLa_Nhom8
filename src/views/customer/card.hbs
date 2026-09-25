@@ -1,0 +1,68 @@
+<h2 class="page-title">Thẻ trả trước</h2>
+
+<div class="card">
+    {{#if error}}<div class="field-error">{{error}}</div>{{/if}}
+    {{#if success}}<div class="field-success">{{success}}</div>{{/if}}
+
+    {{#if card}}
+    <div class="profile-info-row">
+        <span class="label">Mã thẻ</span>
+        <span class="customer-code">{{card.code}}</span>
+    </div>
+    <div class="profile-info-row">
+        <span class="label">Số dư</span>
+        <span class="points-badge">💳 {{formatPrice card.balance}}</span>
+    </div>
+    <div class="profile-info-row">
+        <span class="label">Trạng thái</span>
+        <span class="status-badge {{statusClass card.status}}">{{cardStatusLabel card.status}}</span>
+    </div>
+
+    <form method="POST" action="/me/card/topup" style="margin-top: 1.25rem;">
+        <div class="field-group">
+            <label class="field-label">Nạp tiền vào thẻ (demo)</label>
+            <input class="field-input" type="number" name="amount" min="1000" step="1000" placeholder="VD: 100000">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" {{#eq card.status "locked"}}disabled{{/eq}}>Nạp tiền</button>
+    </form>
+
+    <h3 style="margin-top: 1.5rem; font-size: 1rem;">Lịch sử giao dịch</h3>
+    {{#if transactions.length}}
+    <table class="order-table">
+        <thead>
+            <tr>
+                <th>Thời gian</th>
+                <th>Loại</th>
+                <th>Số tiền</th>
+                <th>Số dư sau GD</th>
+                <th>Ghi chú</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each transactions}}
+            <tr>
+                <td>{{dateFormat this.createdAt}}</td>
+                <td>{{#eq this.type "nap"}}Nạp tiền{{else}}Thanh toán đơn{{/eq}}</td>
+                <td>{{formatPrice this.amount}}</td>
+                <td>{{formatPrice this.balanceAfter}}</td>
+                <td>{{#if this.note}}{{this.note}}{{else}}—{{/if}}</td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+    {{else}}
+    <div class="empty-state">Chưa có giao dịch nào.</div>
+    {{/if}}
+
+    {{else}}
+    <div class="empty-state">
+        Bạn chưa có thẻ trả trước.<br>
+        <span style="font-size: 0.8rem;">Đăng ký để tích lũy số dư và thanh toán nhanh cho các đơn giặt sau này.</span>
+    </div>
+    <form method="POST" action="/me/card/register" style="margin-top: 1rem;">
+        <button type="submit" class="btn btn-primary btn-block">Đăng ký thẻ trả trước</button>
+    </form>
+    {{/if}}
+</div>
+
+<p style="margin-top: 1rem;"><a href="/me/profile">&larr; Quay lại hồ sơ</a></p>

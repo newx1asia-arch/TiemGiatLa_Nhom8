@@ -1,0 +1,44 @@
+<h2 class="page-title">Lịch sử giặt</h2>
+
+<div class="card">
+    {{#if orders.length}}
+    <table class="order-table">
+        <thead>
+            <tr>
+                <th>Mã đơn</th>
+                <th>Ngày nhận</th>
+                <th>Ngày trả</th>
+                <th>Trạng thái</th>
+                <th>Tổng tiền</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each orders}}
+            <tr>
+                <td>{{this.code}}</td>
+                <td>{{dateFormat this.receivedDate}}</td>
+                <td>{{#if this.returnDate}}{{dateFormat this.returnDate}}{{else}}—{{/if}}</td>
+                <td><span class="status-badge {{statusClass this.status}}">{{statusLabel this.status}}</span></td>
+                <td>{{formatPrice this.totalAmount}}</td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+    {{#if totalPages}}
+    <div class="pagination">
+        {{#if hasPrev}}<a href="/me/history?page={{prevPage}}">&laquo; Trước</a>{{/if}}
+        <span class="btn-sm">{{currentPage}} / {{totalPages}}</span>
+        {{#if hasNext}}<a href="/me/history?page={{nextPage}}">Sau &raquo;</a>{{/if}}
+    </div>
+    {{/if}}
+
+    {{else}}
+    <div class="empty-state">
+        Bạn chưa có đơn giặt nào.<br>
+        <span style="font-size: 0.8rem;">(Chức năng tạo đơn hàng sẽ có ở mục 2.2)</span>
+    </div>
+    {{/if}}
+</div>
+
+<p style="margin-top: 1rem;"><a href="/me/profile">&larr; Quay lại hồ sơ</a></p>

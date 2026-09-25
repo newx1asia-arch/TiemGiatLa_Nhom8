@@ -1,0 +1,31 @@
+<div class="card auth-card">
+    <h2 class="page-title">Đăng ký tài khoản</h2>
+
+    {{#if error}}<div class="field-error">{{error}}</div>{{/if}}
+
+    <form method="POST" action="/auth/register">
+        <div class="field-group">
+            <label class="field-label">Họ tên</label>
+            <input class="field-input" type="text" name="name" value="{{old.name}}" required>
+        </div>
+        <div class="field-group">
+            <label class="field-label">Số điện thoại</label>
+            <input class="field-input" type="tel" name="phone" value="{{old.phone}}" placeholder="09xxxxxxxx" required>
+        </div>
+        <div class="field-group">
+            <label class="field-label">Địa chỉ</label>
+            <input class="field-input" type="text" name="address" value="{{old.address}}">
+        </div>
+        <div class="field-group">
+            <label class="field-label">Mật khẩu</label>
+            <input class="field-input" type="password" name="password" required minlength="6">
+        </div>
+        <div class="field-group">
+            <label class="field-label">Xác nhận mật khẩu</label>
+            <input class="field-input" type="password" name="confirmPassword" required minlength="6">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Đăng ký</button>
+    </form>
+
+    <p class="form-footer">Đã có tài khoản? <a href="/auth/login">Đăng nhập</a></p>
+</div>

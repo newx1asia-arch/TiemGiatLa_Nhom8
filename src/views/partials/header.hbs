@@ -1,0 +1,18 @@
+<header class="site-header">
+    <div class="container">
+        <a href="/" class="site-logo">🧺 Tiệm Giặt Là</a>
+        <nav class="nav-links">
+            <a href="/" class="{{#eq currentPath "/"}}active{{/eq}}">Trang chủ</a>
+            {{#if currentCustomer}}
+                <a href="/me/profile" class="{{#eq currentPath "/me/profile"}}active{{/eq}}">Hồ sơ</a>
+                <a href="/me/history" class="{{#eq currentPath "/me/history"}}active{{/eq}}">Lịch sử giặt</a>
+                <form action="/auth/logout" method="POST">
+                    <button type="submit" class="btn-link">Đăng xuất</button>
+                </form>
+            {{else}}
+                <a href="/auth/login" class="{{#eq currentPath "/auth/login"}}active{{/eq}}">Đăng nhập</a>
+                <a href="/auth/register" class="btn btn-primary btn-sm">Đăng ký</a>
+            {{/if}}
+        </nav>
+    </div>
+</header>

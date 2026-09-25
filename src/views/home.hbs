@@ -1,0 +1,19 @@
+<div class="hero">
+    <h1>Hệ thống quản lý của tiệm giặt là</h1>
+    <p>Tiếp nhận → Lập hóa đơn → Thực hiện → Trả đồ</p>
+
+    {{#if currentCustomer}}
+        <a href="/me/profile" class="btn btn-primary">Xem hồ sơ của tôi</a>
+    {{else}}
+        <a href="/auth/register" class="btn btn-primary">Đăng ký ngay</a>
+        <a href="/auth/login" class="btn">Đăng nhập</a>
+    {{/if}}
+</div>
+
+<div class="card">
+    <p style="color: var(--foreground-secondary); font-size: 0.9rem;">
+        Mục 2.1 - Quản lý khách hàng đã sẵn sàng: đăng ký/đăng nhập, xem &amp; sửa hồ sơ,
+        xem điểm tích lũy và lịch sử giặt. Các mục 2.2 - 2.5 (đơn hàng, kho vật tư, báo cáo)
+        sẽ được nhóm bổ sung ở các bước tiếp theo.
+    </p>
+</div>
