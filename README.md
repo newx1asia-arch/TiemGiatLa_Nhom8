@@ -62,37 +62,75 @@ Thống kê các dịch vụ được sử dụng nhiều nhất.
 # 3. Đối tượng sử dụng
 
 ## Khách hàng
-
 Thông tin gồm:
+- Mã khách hàng
+- Họ tên
+- Số điện thoại
+- Địa chỉ
 
-Mã khách hàng
-Họ tên
-Số điện thoại
-Địa chỉ
 ## Đơn hàng
-
 Thông tin gồm:
+- Mã đơn hàng
+- Mã khách hàng
+- Mã nhân viên thực hiện
+- Ngày nhận
+- Ngày trả
+- Trạng thái (Mới nhận, Đang giặt, Đã xong, Đã giao)
+- Phương thức thanh toán (Tiền mặt, Chuyển khoản, Thẻ trả trước)
+- Tổng tiền
 
-Mã đơn hàng
-Ngày nhận
-Ngày trả
-Trạng thái
-Tổng tiền
+## Chi tiết đơn hàng
+Thông tin gồm:
+- Mã chi tiết đơn hàng
+- Mã đơn hàng
+- Mã dịch vụ
+- Số lượng / Trọng lượng (kg)
+- Đơn giá
+- Thành tiền
+- Ghi chú đồ (Vết bẩn cũ, rách nhẹ, đồ hiệu...)
+
 ## Dịch vụ giặt
-
 Thông tin gồm:
+- Mã dịch vụ
+- Tên dịch vụ (Giặt sấy, Giặt hấp, Tẩy vết bẩn...)
+- Đơn vị tính (Kg, Cái, Bộ)
+- Đơn giá
 
-Mã dịch vụ
-Tên dịch vụ
-Đơn giá
 ## Thẻ trả trước
-
 Thông tin gồm:
+- Mã thẻ
+- Mã khách hàng
+- Số dư
+- Trạng thái thẻ (Đang hoạt động, Khóa, Hết hạn)
 
-Mã thẻ
-Số dư
-Trạng thái thẻ
----
+## Lịch sử giao dịch thẻ
+Thông tin gồm:
+- Mã giao dịch
+- Mã thẻ
+- Mã đơn hàng (nếu dùng để thanh toán)
+- Loại giao dịch (Nạp tiền / Thanh toán)
+- Số tiền biến động
+- Thời gian giao dịch
+
+## Nhân viên
+Thông tin gồm:
+- Mã nhân viên
+- Họ tên
+- Số điện thoại
+- Vai trò (Quản lý, Thu ngân, Thợ giặt, Shipper)
+
+## Thiết bị / Máy giặt
+Thông tin gồm:
+- Mã máy
+- Tên máy / Loại máy
+- Trạng thái (Đang trống, Đang giặt, Bảo trì)
+
+## Vật tư & Kho
+Thông tin gồm:
+- Mã vật tư
+- Tên vật tư (Nước giặt, Nước xả, Bag/Túi)
+- Số lượng tồn
+- Đơn vị tính (Lít, Kg, Cái)
 
 # 4. Mục tiêu
 
