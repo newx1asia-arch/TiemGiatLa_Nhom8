@@ -1,0 +1,45 @@
+<div class="container" style="max-width: 600px; margin-top: 30px; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h2>Tạo Đơn Hàng & Chọn Dịch Vụ</h2>
+    <form action="/orders/create" method="POST">
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Nhập Mã Khách Hàng hoặc Số điện thoại (ObjectId):</label>
+            <input type="text" name="customerId" placeholder="Nhập ID khách hàng trong DB" required style="width: 100%; padding: 8px; box-sizing: border-box;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Tên Dịch Vụ:</label>
+            <select name="servicesSelected[0][serviceName]" style="width: 100%; padding: 8px; box-sizing: border-box;">
+                <option value="Giặt Sấy">Giặt Sấy</option>
+                <option value="Ủi Đồ">Ủi Đồ</option>
+                <option value="Giặt Khô">Giặt Khô</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Đơn giá (VNĐ):</label>
+            <input type="number" name="servicesSelected[0][unitPrice]" value="20000" required style="width: 100%; padding: 8px; box-sizing: border-box;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Số lượng (Kg hoặc số món):</label>
+            <input type="number" step="0.1" name="servicesSelected[0][quantity]" value="1" required style="width: 100%; padding: 8px; box-sizing: border-box;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Ngày hẹn trả đồ:</label>
+            <input type="date" name="returnDate" required style="width: 100%; padding: 8px; box-sizing: border-box;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Phương thức thanh toán:</label>
+            <select name="paymentMethod" style="width: 100%; padding: 8px; box-sizing: border-box;">
+                <option value="cash">Tiền mặt</option>
+                <option value="transfer">Chuyển khoản</option>
+                <option value="prepaid_card">Thẻ trả trước</option>
+            </select>
+        </div>
+
+        <button type="submit" style="background: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; font-size: 16px;">Tạo Đơn Hàng & In Hóa Đơn</button>
+    </form>
+</div>

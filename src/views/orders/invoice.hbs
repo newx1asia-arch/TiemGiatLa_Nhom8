@@ -1,0 +1,50 @@
+<div class="container" style="max-width: 700px; margin-top: 30px; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <div style="text-align: center; margin-bottom: 20px;">
+        <h2>🧺 HÓA ĐƠN TIỆM GIẶT LÀ</h2>
+        <p>Mã đơn hàng: <strong>{{order.code}}</strong></p>
+        <p>Ngày tạo: {{order.createdAt}}</p>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+    <div style="margin-bottom: 20px;">
+        <h4>Thông tin khách hàng:</h4>
+        <p><strong>Họ tên:</strong> {{order.customer.fullname}}</p>
+        <p><strong>Số điện thoại:</strong> {{order.customer.phone}}</p>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+        <h4>Chi tiết dịch vụ:</h4>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa; text-align: left;">
+                    <th style="padding: 10px; border-bottom: 1px solid #ddd;">Dịch vụ</th>
+                    <th style="padding: 10px; border-bottom: 1px solid #ddd;">Đơn giá</th>
+                    <th style="padding: 10px; border-bottom: 1px solid #ddd;">Số lượng</th>
+                    <th style="padding: 10px; border-bottom: 1px solid #ddd;">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each order.services}}
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">{{this.serviceName}}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">{{this.unitPrice}} đ</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">{{this.quantity}}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">{{this.subtotal}} đ</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="text-align: right; margin-bottom: 30px;">
+        <h3>Tổng tiền: <span style="color: #d9534f;">{{order.totalAmount}} đ</span></h3>
+        <p>Ngày hẹn trả: <strong>{{order.returnDate}}</strong></p>
+        <p>Thanh toán: <strong>{{order.paymentMethod}}</strong> (Trạng thái: {{order.paymentStatus}})</p>
+    </div>
+
+    <div style="text-align: center;">
+        <button onclick="window.print()" style="background: #28a745; color: white; border: none; padding: 10px 25px; font-size: 16px; border-radius: 4px; cursor: pointer;">🖨️ In Hóa Đơn / Mã Vạch</button>
+        <a href="/" style="display: inline-block; margin-left: 15px; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">Về trang chủ</a>
+    </div>
+</div>

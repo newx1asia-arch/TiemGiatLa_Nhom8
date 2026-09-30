@@ -6,6 +6,10 @@
             {{#if currentCustomer}}
                 <a href="/me/profile" class="{{#eq currentPath "/me/profile"}}active{{/eq}}">Hồ sơ</a>
                 <a href="/me/history" class="{{#eq currentPath "/me/history"}}active{{/eq}}">Lịch sử giặt</a>
+                
+                <!-- THÊM MỚI: Mục Quản lý đơn hàng / Chọn dịch vụ -->
+                <a href="/orders/create" class="{{#eq currentPath "/orders/create"}}active{{/eq}}">Tạo đơn hàng</a>
+
                 <form action="/auth/logout" method="POST">
                     <button type="submit" class="btn-link">Đăng xuất</button>
                 </form>
