@@ -1,0 +1,25 @@
+<h2>{{#if supply}}Sửa vật tư{{else}}Thêm vật tư{{/if}}</h2>
+
+<form method="POST"
+      action="{{#if supply}}/supplies/{{supply._id}}?_method=PUT{{else}}/supplies{{/if}}">
+  <p>Tên vật tư:
+    <input name="name" value="{{supply.name}}" placeholder="Xà phòng, Nước xả, Bao bì..." required>
+  </p>
+  <p>Đơn vị:
+    <input name="unit" value="{{#if supply}}{{supply.unit}}{{else}}cái{{/if}}">
+  </p>
+  <p>Số lượng tồn:
+    <input type="number" name="quantity" min="0" value="{{#if supply}}{{supply.quantity}}{{else}}0{{/if}}">
+  </p>
+  <p>Ngưỡng cảnh báo sắp hết:
+    <input type="number" name="minStock" min="0" value="{{#if supply}}{{supply.minStock}}{{else}}5{{/if}}">
+  </p>
+  <p>Giá nhập (đ):
+    <input type="number" name="price" min="0" value="{{#if supply}}{{supply.price}}{{else}}0{{/if}}">
+  </p>
+  <p>Ghi chú:
+    <input name="note" value="{{supply.note}}">
+  </p>
+  <button type="submit">Lưu</button>
+  <a href="/supplies">Hủy</a>
+</form>

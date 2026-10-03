@@ -1,0 +1,53 @@
+<h2>Quản lý kho vật tư</h2>
+
+{{#if lowCount}}
+  <p style="color:#c0392b;font-weight:bold">⚠ Có {{lowCount}} vật tư sắp hết, cần nhập thêm!</p>
+{{/if}}
+
+<a href="/supplies/create">+ Thêm vật tư</a>
+
+<table border="1" cellpadding="8" style="margin-top:12px;border-collapse:collapse">
+  <thead>
+    <tr>
+      <th>Tên vật tư</th>
+      <th>Tồn kho</th>
+      <th>Đơn vị</th>
+      <th>Giá nhập</th>
+      <th>Trạng thái</th>
+      <th>Nhập / Xuất</th>
+      <th>Thao tác</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each supplies}}
+    <tr>
+      <td>{{this.name}}</td>
+      <td>{{this.quantity}}</td>
+      <td>{{this.unit}}</td>
+      <td>{{formatPrice this.price}}</td>
+      <td>
+        {{#if this.isLow}}<span style="color:#c0392b">⚠ Sắp hết</span>{{else}}Đủ dùng{{/if}}
+      </td>
+      <td>
+        <form action="/supplies/{{this._id}}/adjust" method="POST" style="display:inline">
+          <input type="number" name="amount" min="1" required style="width:70px">
+          <select name="type">
+            <option value="in">Nhập</option>
+            <option value="out">Xuất</option>
+          </select>
+          <button type="submit">OK</button>
+        </form>
+      </td>
+      <td>
+        <a href="/supplies/{{this._id}}/edit">Sửa</a>
+        <form action="/supplies/{{this._id}}?_method=DELETE" method="POST" style="display:inline"
+              onsubmit="return confirm('Xóa vật tư này?')">
+          <button type="submit">Xóa</button>
+        </form>
+      </td>
+    </tr>
+    {{else}}
+    <tr><td colspan="7">Chưa có vật tư nào.</td></tr>
+    {{/each}}
+  </tbody>
+</table>
