@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{pageTitle}} · Tiệm Giặt Là</title>
+    <link rel="stylesheet" href="/css/app.css">
+    <style>
+        @page { margin: 0; size: {{#eq size 'k80'}}80mm auto{{else}}50mm 30mm{{/eq}}; }
+        html, body { margin: 0; background: #eef1f5; }
+        .label-tools { display: flex; flex-wrap: wrap; gap: .6rem; align-items: end; padding: .9rem 1rem; background: #fff; border-bottom: 1px solid #dde2ea; }
+        .label-tools label { display: grid; gap: .2rem; font-size: .8rem; color: #5b6778; }
+        .label-tools input, .label-tools select { padding: .45rem .6rem; border: 1px solid #c3cbd7; border-radius: 6px; font: inherit; }
+        .label-tools input[type=number] { width: 5rem; }
+        .label-hint { padding: .6rem 1rem 0; font-size: .85rem; color: #5b6778; }
+        .label-sheet { display: flex; flex-wrap: wrap; gap: 12px; padding: 1rem; }
+
+        .tag { background: #fff; color: #000; box-sizing: border-box; overflow: hidden; font-family: Arial, Helvetica, sans-serif;
+               border: 1px dashed #9aa5b5; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; break-after: page; }
+        .tag-tem { width: 50mm; height: 30mm; padding: 1.5mm 2mm; }
+        .tag-k80 { width: 72mm; padding: 3mm 3mm; margin: 0 auto; }
+        .tag-head { display: flex; justify-content: space-between; font-size: 7pt; letter-spacing: .02em; }
+        .tag-k80 .tag-head { font-size: 9pt; }
+        .tag .barcode { display: block; width: 100%; height: 11mm; }
+        .tag-k80 .barcode { height: 16mm; }
+        .tag-code { text-align: center; font-family: "Courier New", monospace; font-weight: 700; font-size: 10pt; letter-spacing: .12em; line-height: 1; }
+        .tag-k80 .tag-code { font-size: 14pt; }
+        .tag-foot { display: flex; justify-content: space-between; gap: 2mm; font-size: 7pt; line-height: 1.2; }
+        .tag-k80 .tag-foot { font-size: 10pt; }
+        .tag-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; min-width: 0; }
+        .tag-date { white-space: nowrap; }
+        .tag-flag { font-size: 7pt; font-weight: 700; }
+
+        @media print {
+            html, body { background: #fff; }
+            .no-print { display: none !important; }
+            .label-sheet { display: block; padding: 0; }
+            .tag { border: 0; margin: 0; }
+            .tag-tem { width: 50mm; height: 30mm; }
+            .tag-k80 { width: 80mm; padding: 3mm 4mm; }
+        }
+    </style>
+</head>
+<body>
+    {{> icons}}
+    <form class="label-tools no-print" method="GET" action="/orders/label/{{order._id}}">
+        <label>Số tem (mỗi túi/bó đồ một tem)
+            <input type="number" name="copies" min="1" max="20" value="{{copies}}">
+        </label>
+        <label>Loại giấy
+            <select name="size">
+                {{#each sizes}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+            </select>
+        </label>
+        <button type="submit" class="btn btn-secondary">Cập nhật</button>
+        <button type="button" class="btn btn-primary" onclick="window.print()">{{> icon name="printer"}} In tem</button>
+        <a class="btn btn-secondary" href="/orders/invoice/{{order._id}}">← Về hóa đơn</a>
+    </form>
+    <p class="label-hint no-print">Khi in, chọn đúng khổ giấy trong hộp thoại in và đặt <b>lề = Không (None)</b>, <b>tỷ lệ = 100%</b> để mã vạch không bị co méo.</p>
+
+    <div class="label-sheet">
+        {{#each labels}}
+        <div class="tag tag-{{../size}}">
+            <div class="tag-head"><span>TIỆM GIẶT LÀ</span><span>Tem {{n}}/{{of}}</span></div>
+            {{{../barcode}}}
+            <div class="tag-code">{{../order.code}}</div>
+            <div class="tag-foot">
+                <span class="tag-name">{{../order.customer.name}}</span>
+                <span class="tag-date">Trả {{dateFormat ../order.returnDate}}</span>
+            </div>
+            {{#if ../hasNote}}<div class="tag-flag">★ CÓ GHI CHÚ ĐỒ – xem đơn</div>{{/if}}
+        </div>
+        {{/each}}
+    </div>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<div class="card auth-card">
+    <h1 class="page-title">Đăng nhập</h1>
+
+    {{#if success}}<div class="field-success">{{success}}</div>{{/if}}
+    {{#if error}}<div class="field-error">{{error}}</div>{{/if}}
+
+    <form method="POST" action="/auth/login">
+{{> csrf}}
+        <div class="field-group">
+            <label class="field-label" for="phone">Số điện thoại</label>
+            <input class="field-input" id="phone" type="tel" name="phone" autocomplete="username" required autofocus>
+        </div>
+        <div class="field-group">
+            <label class="field-label" for="password">Mật khẩu</label>
+            <input class="field-input" id="password" type="password" name="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Đăng nhập</button>
+    </form>
+
+    <p class="form-footer"><a href="/auth/forgot">Quên mật khẩu?</a></p>
+    <p class="form-footer">Chưa có tài khoản? <a href="/auth/register">Đăng ký</a></p>
+</div>

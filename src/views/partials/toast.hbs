@@ -1,0 +1,34 @@
+<div id="toast-box"></div>
+<script>
+    function showToast(msg, type) {
+        var t = document.createElement('div');
+        t.className = 'toast ' + (type || 'success');
+        t.textContent = msg;
+        document.getElementById('toast-box').appendChild(t);
+        setTimeout(function () { t.remove(); }, 3500);
+    }
+
+    // Hiện thông báo còn lưu từ lần bấm trước (sau khi trang tải lại)
+    (function () {
+        var saved = sessionStorage.getItem('toast');
+        if (saved) {
+            var data = JSON.parse(saved);
+            showToast(data.msg, data.type);
+            sessionStorage.removeItem('toast');
+        }
+    })();
+
+    // Bắt sự kiện gửi form Nhập/Xuất kho trong bảng vật tư
+    document.querySelectorAll('table form').forEach(function (form) {
+        var select = form.querySelector('select');
+        if (!select) return; // bỏ qua form khác (vd: nút Xóa)
+
+        form.addEventListener('submit', function () {
+            var qty  = form.querySelector('input:not([type=hidden])').value;
+            var name = form.closest('tr').children[0].textContent.trim();
+            var isIn = select.selectedIndex === 0; // "Nhập" là lựa chọn đầu tiên
+            var msg  = (isIn ? 'Nhập ' : 'Xuất ') + qty + ' ' + name + ' thành công!';
+            sessionStorage.setItem('toast', JSON.stringify({ msg: msg, type: 'success' }));
+        });
+    });
+</script>

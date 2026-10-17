@@ -1,0 +1,23 @@
+<div class="card auth-card">
+    <h1 class="page-title">Đặt lại mật khẩu</h1>
+
+    {{#if invalid}}
+    <div class="field-error">Link đặt lại mật khẩu không hợp lệ, đã hết hạn (30 phút) hoặc đã được dùng.</div>
+    <p class="form-footer"><a href="/auth/forgot">Yêu cầu link mới</a></p>
+    {{else}}
+    {{#if error}}<div class="field-error">{{error}}</div>{{/if}}
+    <form method="POST" action="/auth/reset/{{token}}">
+{{> csrf}}
+        <div class="field-group">
+            <label class="field-label" for="password">Mật khẩu mới</label>
+            <input class="field-input" id="password" type="password" name="password" minlength="8" maxlength="72" autocomplete="new-password" required autofocus>
+            <span class="field-hint">Ít nhất 8 ký tự.</span>
+        </div>
+        <div class="field-group">
+            <label class="field-label" for="confirmPassword">Nhập lại mật khẩu mới</label>
+            <input class="field-input" id="confirmPassword" type="password" name="confirmPassword" minlength="8" maxlength="72" autocomplete="new-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Đặt lại mật khẩu</button>
+    </form>
+    {{/if}}
+</div>

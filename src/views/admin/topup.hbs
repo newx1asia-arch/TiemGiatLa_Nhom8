@@ -1,0 +1,25 @@
+<div class="page-head">
+    <div>
+        <h1>Nạp thẻ trả trước</h1>
+        <p>Nạp tiền vào thẻ của khách tại quầy, sau khi đã nhận tiền thật từ khách.</p>
+    </div>
+</div>
+
+{{#if error}}<div class="field-error">{{error}}</div>{{/if}}
+{{#if success}}<div class="field-success">{{success}}</div>{{/if}}
+
+<section class="card">
+    <form action="/admin/topup" method="POST" class="inline-form">
+        {{> csrf}}
+        <div class="field-group">
+            <label class="field-label" for="customer">Mã khách hàng hoặc số điện thoại</label>
+            <input class="field-input" id="customer" type="text" name="customer" value="{{old.customer}}" placeholder="VD: KH000001 hoặc 0912345678" required>
+            <span class="field-hint">Khách chưa có thẻ sẽ được tạo thẻ mới tự động.</span>
+        </div>
+        <div class="field-group">
+            <label class="field-label" for="amount">Số tiền nạp (đ)</label>
+            <input class="field-input" id="amount" type="number" name="amount" value="{{old.amount}}" min="1000" max="50000000" step="1000" placeholder="VD: 200000" required>
+        </div>
+        <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận đã nhận đủ tiền từ khách?')">{{> icon name="card"}} Nạp tiền</button>
+    </form>
+</section>

@@ -1,0 +1,50 @@
+# CÁCH 1 (mặc định, khuyên dùng): app + MongoDB chạy ngay trong Docker, dữ liệu lưu bền trong volume.
+#   docker compose up -d --build
+# Muốn dùng MongoDB Atlas (đám mây) thay vì Mongo trong Docker -> xem docker-compose.atlas.yml (CÁCH 2).
+# Gặp lỗi "mongo" tự thoát ngay (CPU/VM không hỗ trợ AVX)? Đặt MONGO_IMAGE=mongo:4.4 trong .env.
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      TRUST_PROXY: "1"
+      # Ghi đè MONGODB_URI trong .env: ở chế độ này app luôn nối tới dịch vụ "mongo" bên dưới
+      MONGODB_URI: mongodb://mongo:27017/tiem_giat_la
+    depends_on:
+      mongo:
+        condition: service_healthy   # chờ Mongo sẵn sàng rồi mới chạy app
+    expose:
+      - "3000"
+
+  mongo:
+    image: ${MONGO_IMAGE:-mongo:7}
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.adminCommand('ping').ok\" || mongo --quiet --eval \"db.adminCommand('ping').ok\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    # Không mở cổng ra ngoài: chỉ app trong cùng mạng Docker mới nối được
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      - app
+
+volumes:
+  mongo-data:
+  caddy-data:

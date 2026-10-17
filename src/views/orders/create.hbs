@@ -1,0 +1,252 @@
+<div class="page-head">
+    <div>
+        <h1>{{#if editOrder}}Sửa đơn {{editOrder.code}}{{else}}Tạo đơn hàng{{/if}}</h1>
+        <p>{{#if editOrder}}Chỉ sửa được khi đơn chưa thu tiền và chưa giao. Mọi thay đổi được ghi vào nhật ký đơn.{{else}}Chọn một hoặc nhiều dịch vụ trong cùng một hóa đơn, tổng tiền được tính tự động theo bảng giá của tiệm.{{/if}}</p>
+    </div>
+</div>
+
+{{#if error}}<div class="field-error">{{error}}</div>{{/if}}
+
+<form action="{{formAction}}" method="POST" id="orderForm">
+{{> csrf}}
+  <div class="order-layout">
+
+    <div class="card">
+
+      <div class="form-section">
+        <div class="form-section-title"><span class="n">1</span> Khách hàng</div>
+        {{#if editOrder}}
+        <p><b>{{editOrder.customer.name}}</b> <span class="muted">· {{editOrder.customer.code}} · {{editOrder.customer.phone}}</span></p>
+        <span class="field-hint">Không đổi được khách của đơn đã lập. Nếu chọn nhầm khách, hãy hủy đơn rồi lập đơn mới.</span>
+        {{else}}
+        <div class="choice-grid two" id="custMode">
+          <label class="choice">
+            <input type="radio" name="customerMode" value="existing" {{#unless newMode}}checked{{/unless}}>
+            <span class="choice-box"><b>Khách đã có hồ sơ</b><small>Nhập mã KH hoặc số điện thoại</small></span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="customerMode" value="new" {{#if newMode}}checked{{/if}}>
+            <span class="choice-box"><b>Khách mới (vãng lai)</b><small>Chỉ cần tên và số điện thoại</small></span>
+          </label>
+        </div>
+
+        <div id="custExisting" class="field-group flush" style="margin-top:.85rem;">
+          <label class="field-label" for="customerId">Mã khách hàng hoặc số điện thoại</label>
+          <input class="field-input" type="text" name="customerId" id="customerId" value="{{old.customerId}}"
+                 placeholder="VD: KH000001 hoặc 0912345678" maxlength="40">
+        </div>
+
+        <div id="custNew" style="margin-top:.85rem;">
+          <div class="field-row">
+            <div class="field-group flush">
+              <label class="field-label" for="newName">Họ tên khách</label>
+              <input class="field-input" type="text" name="newName" id="newName" value="{{old.newName}}" maxlength="255" placeholder="VD: Nguyễn Văn A">
+            </div>
+            <div class="field-group flush">
+              <label class="field-label" for="newPhone">Số điện thoại</label>
+              <input class="field-input" type="tel" name="newPhone" id="newPhone" value="{{old.newPhone}}" maxlength="10" placeholder="VD: 0912345678">
+            </div>
+          </div>
+          <span class="field-hint">Hệ thống tạo hồ sơ khách (mã KH) khi lưu đơn. Khách chưa có tài khoản đăng nhập, nhân viên có thể cấp sau ở mục Khách hàng.</span>
+        </div>
+        {{/if}}
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title"><span class="n">2</span> Dịch vụ và số lượng</div>
+        <span class="field-hint">Tick chọn một hoặc nhiều dịch vụ, rồi nhập số lượng cho từng dịch vụ.</span>
+        {{#if noServices}}<div class="field-error">Chưa có dịch vụ nào đang bán. Chủ tiệm cần thêm dịch vụ ở mục Bảng giá.</div>{{/if}}
+        <div class="svc-list">
+          {{#each services}}
+          <div class="svc-row {{#if checked}}on{{/if}}">
+            <label class="svc-pick">
+              <input type="checkbox" name="serviceKey" value="{{key}}" data-name="{{name}}" data-price="{{price}}" data-step="{{step}}" data-unit="{{unit}}" {{#if checked}}checked{{/if}}>
+              <span class="svc-name"><b>{{name}}</b><small>{{formatPrice price}} / {{unit}}</small></span>
+            </label>
+            <div class="qty svc-qty">
+              <button type="button" class="qminus" aria-label="Giảm số lượng {{name}}">−</button>
+              <input class="field-input" type="number" step="{{step}}" min="{{step}}" max="200" name="qty_{{key}}" value="{{qty}}" aria-label="Số lượng {{name}} ({{unit}})" {{#unless checked}}disabled{{/unless}}>
+              <button type="button" class="qplus" aria-label="Tăng số lượng {{name}}">+</button>
+            </div>
+            <span class="svc-unit">{{unit}}</span>
+            <b class="svc-sub"></b>
+          </div>
+          {{/each}}
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title"><span class="n">3</span> Ngày hẹn trả đồ</div>
+        <div class="chip-row" id="quickDates">
+          <button type="button" class="chip" data-add="0">Hôm nay</button>
+          <button type="button" class="chip" data-add="1">Ngày mai</button>
+          <button type="button" class="chip" data-add="2">+2 ngày</button>
+          <button type="button" class="chip" data-add="3">+3 ngày</button>
+        </div>
+        <input class="field-input" type="date" name="returnDate" id="returnDate" value="{{old.returnDate}}" min="{{minReturnDate}}" required aria-label="Ngày hẹn trả">
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title"><span class="n">4</span> Phương thức thanh toán dự kiến</div>
+        <div class="choice-grid">
+          {{#each paymentOptions}}
+          <label class="choice">
+            <input type="radio" name="paymentMethod" value="{{value}}" data-text="{{label}}" {{#if checked}}checked{{/if}}>
+            <span class="choice-box"><b>{{label}}</b></span>
+          </label>
+          {{/each}}
+        </div>
+        <span class="field-hint">Tiền chỉ được ghi nhận sau khi thu tiền ở trang hóa đơn.</span>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title"><span class="n">5</span> Ghi chú đồ</div>
+        <textarea class="field-textarea" name="note" id="note" rows="3" maxlength="500" placeholder="VD: áo trắng có vết bẩn cũ ở cổ, quần rách nhẹ ở gấu, đồ hiệu...">{{old.note}}</textarea>
+        <span class="field-hint">Ghi lại tình trạng đồ lúc nhận để tránh tranh cãi khi trả (tối đa 500 ký tự).</span>
+      </div>
+
+    </div>
+
+    <aside class="card summary">
+      <h3>Tóm tắt đơn hàng</h3>
+      <div id="sLines" class="summary-lines"></div>
+      <div class="summary-row"><span>Ngày trả đồ</span><b id="sDate">Chưa chọn</b></div>
+      <div class="summary-row"><span>Thanh toán</span><b id="sPay"></b></div>
+
+      <div class="summary-total">
+        <span>Tạm tính</span>
+        <strong id="sTotal"></strong>
+      </div>
+
+      <button type="submit" id="submitBtn" class="btn btn-primary btn-lg btn-block">{{#if editOrder}}Lưu thay đổi{{else}}Tạo đơn và lập hóa đơn{{/if}}</button>
+      {{#if editOrder}}<a href="/orders/invoice/{{editOrder._id}}" class="btn btn-secondary btn-block" style="margin-top:.5rem;">Hủy thay đổi</a>{{/if}}
+      <p class="note">Số tiền cuối cùng do hệ thống tính lại theo bảng giá khi lưu đơn.</p>
+    </aside>
+
+  </div>
+</form>
+
+<script>
+(function () {
+  var date = document.getElementById('returnDate');
+  var chips = document.querySelectorAll('#quickDates .chip');
+  var rows = Array.prototype.slice.call(document.querySelectorAll('.svc-row'));
+  var submitBtn = document.getElementById('submitBtn');
+
+  function money(n) { return (Math.round(n) || 0).toLocaleString('vi-VN') + ' đ'; }
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function fmtISO(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function parts(row) {
+    var box = row.querySelector('input[type="checkbox"]');
+    return { box: box, qty: row.querySelector('input[type="number"]') };
+  }
+
+  // Giá hiển thị ở đây CHỈ để tham khảo; server luôn tự tính lại.
+  function update() {
+    var lines = document.getElementById('sLines');
+    var pay = document.querySelector('input[name="paymentMethod"]:checked');
+    var total = 0, count = 0;
+    while (lines.firstChild) lines.removeChild(lines.firstChild);
+
+    rows.forEach(function (row) {
+      var p = parts(row);
+      var sub = row.querySelector('.svc-sub');
+      var price = parseFloat(p.box.getAttribute('data-price')) || 0;
+      var q = parseFloat(p.qty.value) || 0;
+      row.classList.toggle('on', p.box.checked);
+      p.qty.disabled = !p.box.checked;
+      if (!p.box.checked) { sub.textContent = ''; return; }
+      count++;
+      total += price * q;
+      sub.textContent = money(price * q);
+
+      var line = document.createElement('div');
+      line.className = 'summary-row';
+      var name = document.createElement('span');
+      name.textContent = p.box.getAttribute('data-name') + ' × ' + q + ' ' + p.box.getAttribute('data-unit');
+      var amount = document.createElement('b');
+      amount.textContent = money(price * q);
+      line.appendChild(name); line.appendChild(amount);
+      lines.appendChild(line);
+    });
+
+    if (!count) {
+      var empty = document.createElement('div');
+      empty.className = 'summary-row';
+      var msg = document.createElement('span');
+      msg.textContent = 'Chưa chọn dịch vụ nào';
+      empty.appendChild(msg);
+      lines.appendChild(empty);
+    }
+    submitBtn.disabled = !count;
+
+    document.getElementById('sPay').textContent = pay ? pay.getAttribute('data-text') : '';
+    document.getElementById('sTotal').textContent = money(total);
+
+    if (date.value) {
+      var d = date.value.split('-');
+      document.getElementById('sDate').textContent = d[2] + '/' + d[1] + '/' + d[0];
+    } else {
+      document.getElementById('sDate').textContent = 'Chưa chọn';
+    }
+
+    chips.forEach(function (c) {
+      var dd = new Date(); dd.setDate(dd.getDate() + parseInt(c.getAttribute('data-add'), 10));
+      c.classList.toggle('on', date.value === fmtISO(dd));
+    });
+  }
+
+  rows.forEach(function (row) {
+    var p = parts(row);
+    var step = parseFloat(p.box.getAttribute('data-step')) || 1;
+    var delta = step >= 1 ? 1 : 0.5; // kg: nhảy 0,5; món/cái/đôi: nhảy 1
+
+    p.box.addEventListener('change', update);
+    p.qty.addEventListener('input', update);
+    row.querySelector('.qminus').addEventListener('click', function () { bump(-1); });
+    row.querySelector('.qplus').addEventListener('click', function () { bump(1); });
+
+    function bump(sign) {
+      if (!p.box.checked) p.box.checked = true; // bấm +/- thì tự tick dịch vụ đó
+      var v = (parseFloat(p.qty.value) || 0) + sign * delta;
+      p.qty.value = Math.max(step, Math.round(v * 10) / 10);
+      update();
+    }
+  });
+
+  // Chọn nhanh ngày hẹn
+  chips.forEach(function (c) {
+    c.addEventListener('click', function () {
+      var d = new Date(); d.setDate(d.getDate() + parseInt(c.getAttribute('data-add'), 10));
+      date.value = fmtISO(d);
+      update();
+    });
+  });
+
+  date.addEventListener('input', update);
+  document.querySelectorAll('input[name="paymentMethod"]').forEach(function (r) {
+    r.addEventListener('change', update);
+  });
+
+  // Mặc định hẹn trả ngày mai (nếu chưa có giá trị, ví dụ lần đầu mở form)
+  if (!date.value) date.value = fmtISO(new Date(Date.now() + 86400000));
+
+  // Chuyển giữa "khách đã có hồ sơ" và "khách mới"
+  var modeRadios = document.querySelectorAll('input[name="customerMode"]');
+  function syncMode() {
+    var checked = document.querySelector('input[name="customerMode"]:checked');
+    if (!checked) return;
+    var isNew = checked.value === 'new';
+    var ex = document.getElementById('custExisting'), nw = document.getElementById('custNew');
+    ex.style.display = isNew ? 'none' : '';
+    nw.style.display = isNew ? '' : 'none';
+    document.getElementById('customerId').required = !isNew;
+    document.getElementById('newName').required = isNew;
+    document.getElementById('newPhone').required = isNew;
+  }
+  modeRadios.forEach(function (r) { r.addEventListener('change', syncMode); });
+  syncMode();
+
+  update();
+})();
+</script>

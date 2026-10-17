@@ -1,0 +1,196 @@
+<div class="stat-grid">
+    <div class="stat">
+        <div class="stat-label">{{> icon name="orders"}} Đơn hôm nay</div>
+        <div class="stat-value">{{formatNumber ordersToday}}</div>
+        <div class="stat-sub">Tổng cộng {{formatNumber totalOrders}} đơn</div>
+    </div>
+    {{#if isOwner}}
+    <div class="stat ok">
+        <div class="stat-label">{{> icon name="trend"}} Doanh số hôm nay</div>
+        <div class="stat-value">{{formatPrice revenueToday}}</div>
+        <div class="stat-sub">7 ngày: {{formatPrice weekRevenue}}</div>
+    </div>
+    {{else}}
+    <div class="stat ok">
+        <div class="stat-label">{{> icon name="check"}} Đơn tôi lập hôm nay</div>
+        <div class="stat-value">{{formatNumber me.createdToday}}</div>
+        <div class="stat-sub">Tháng này: {{formatNumber me.createdMonth}} đơn</div>
+    </div>
+    {{/if}}
+    <div class="stat warn">
+        <div class="stat-label">{{> icon name="clock"}} Đang xử lý</div>
+        <div class="stat-value">{{formatNumber inProgress}}</div>
+        <div class="stat-sub">Chờ giặt + đang giặt</div>
+    </div>
+    <div class="stat {{#if lowSupplies.length}}danger{{/if}}">
+        <div class="stat-label">{{> icon name="alert"}} Vật tư sắp hết</div>
+        <div class="stat-value">{{lowSupplies.length}}</div>
+        <div class="stat-sub">{{#if unpaid.count}}{{unpaid.count}} đơn chưa thanh toán{{else}}Không có đơn nợ{{/if}}</div>
+    </div>
+</div>
+
+<div class="dash-grid">
+    {{#if isOwner}}
+    <section class="card">
+        <div class="card-head">
+            <h3>Doanh số 7 ngày gần nhất</h3>
+            <a href="/admin/reports">Báo cáo chi tiết</a>
+        </div>
+        <div class="bars">
+            {{#each days}}
+            <div class="bar-col" title="{{label}}: {{formatPrice total}}">
+                <span class="bar-val">{{short}}</span>
+                <div class="bar {{#if today}}today{{/if}}" style="height: {{height}}%"></div>
+                <span class="bar-label">{{label}}</span>
+            </div>
+            {{/each}}
+        </div>
+        <p class="muted flush">Tổng 7 ngày: {{formatPrice weekRevenue}}</p>
+    </section>
+    {{else}}
+    <section class="card">
+        <div class="card-head"><h3>Thống kê công việc của tôi</h3></div>
+        <div class="my-stats">
+            <div><span>Đơn đã lập hôm nay</span><b>{{formatNumber me.createdToday}}</b></div>
+            <div><span>Đơn đã lập trong tháng</span><b>{{formatNumber me.createdMonth}}</b></div>
+            <div><span>Lượt cập nhật trạng thái hôm nay</span><b>{{formatNumber me.updatesToday}}</b></div>
+            <div><span>Lượt cập nhật trong tháng</span><b>{{formatNumber me.updatesMonth}}</b></div>
+            <div><span>Đơn đã giao trong tháng</span><b>{{formatNumber me.deliveredMonth}}</b></div>
+        </div>
+    </section>
+    {{/if}}
+
+    <section class="card">
+        <div class="card-head"><h3>Đơn theo trạng thái</h3></div>
+        {{> donut chart=statusChart}}
+    </section>
+</div>
+
+{{#if isOwner}}
+<div class="dash-grid even">
+    <section class="card">
+        <div class="card-head"><h3>Hoạt động nhân viên 7 ngày</h3><span class="muted">Toàn tiệm</span></div>
+        {{{activityChart}}}
+    </section>
+    <section class="card">
+        <div class="card-head"><h3>So sánh nhân viên (tháng này)</h3></div>
+        {{{teamChart}}}
+    </section>
+</div>
+{{else}}
+<div class="dash-grid">
+    <section class="card">
+        <div class="card-head"><h3>Hoạt động của tôi 7 ngày qua</h3></div>
+        {{{activityChart}}}
+    </section>
+    <section class="card">
+        <div class="card-head"><h3>Đơn tôi lập theo trạng thái</h3></div>
+        {{> donut chart=myStatusChart}}
+    </section>
+</div>
+{{/if}}
+
+{{#if isOwner}}
+<section class="card flush" style="margin-bottom: 1rem;">
+    <div class="card-head">
+        <h3>Hiệu suất nhân viên (tháng này)</h3>
+        <a href="/admin/staff">Quản lý nhân viên</a>
+    </div>
+    {{#if team.length}}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nhân viên</th>
+                    <th class="num">Đơn lập hôm nay</th>
+                    <th class="num">Đơn lập trong tháng</th>
+                    <th class="num">Doanh số đơn đã lập</th>
+                    <th class="num">Cập nhật hôm nay</th>
+                    <th class="num">Cập nhật trong tháng</th>
+                    <th class="num">Đã giao</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each team}}
+                <tr>
+                    <td><b>{{name}}</b> <span class="badge {{#eq role 'owner'}}badge-owner{{else}}badge-staff{{/eq}}">{{roleLabel role}}</span>{{#if isSelf}} <span class="muted">(Bạn)</span>{{/if}}</td>
+                    <td class="num">{{createdToday}}</td>
+                    <td class="num">{{createdMonth}}</td>
+                    <td class="num">{{formatPrice revenueMonth}}</td>
+                    <td class="num">{{updatesToday}}</td>
+                    <td class="num">{{updatesMonth}}</td>
+                    <td class="num">{{deliveredMonth}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    {{else}}
+    <div class="empty-state">Chưa có nhân viên nào.</div>
+    {{/if}}
+</section>
+{{/if}}
+
+<div class="dash-grid even">
+    <section class="card flush">
+        <div class="card-head">
+            <h3>Đơn hàng gần đây</h3>
+            <a href="/admin/orders">Xem tất cả</a>
+        </div>
+        {{#if recentOrders.length}}
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Trạng thái</th><th class="num">Tổng tiền</th></tr></thead>
+                <tbody>
+                    {{#each recentOrders}}
+                    <tr>
+                        <td class="mono"><a href="/orders/invoice/{{_id}}">{{code}}</a></td>
+                        <td>{{customerName}}</td>
+                        <td><span class="status-badge {{statusClass status}}">{{statusLabel status}}</span></td>
+                        <td class="num">{{formatPrice totalAmount}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}
+        <div class="empty-state">Chưa có đơn hàng nào.</div>
+        {{/if}}
+    </section>
+
+    <div>
+        {{#if isOwner}}
+        <section class="card">
+            <div class="card-head"><h3>Dịch vụ dùng nhiều nhất</h3></div>
+            {{#if topServices.length}}
+            <ul class="progress-list">
+                {{#each topServices}}
+                <li>
+                    <div class="progress-top"><span>{{_id}}</span><b>{{formatPrice revenue}}</b></div>
+                    <div class="progress-track"><i style="width: {{percent}}%"></i></div>
+                </li>
+                {{/each}}
+            </ul>
+            {{else}}
+            <div class="empty-state">Chưa có dữ liệu.</div>
+            {{/if}}
+        </section>
+        {{/if}}
+
+        <section class="card">
+            <div class="card-head">
+                <h3>Vật tư cần nhập thêm</h3>
+                <a href="/supplies">Kho vật tư</a>
+            </div>
+            {{#if lowSupplies.length}}
+            <ul class="info-list">
+                {{#each lowSupplies}}
+                <li><span>{{name}}</span><b>{{quantity}} {{unit}} <span class="badge badge-warn">Sắp hết</span></b></li>
+                {{/each}}
+            </ul>
+            {{else}}
+            <p class="muted flush">Tất cả vật tư đều đủ dùng.</p>
+            {{/if}}
+        </section>
+    </div>
+</div>

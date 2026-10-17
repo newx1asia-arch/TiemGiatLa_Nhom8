@@ -1,0 +1,86 @@
+<div class="page-head">
+    <div>
+        <h1>Quản lý đơn hàng</h1>
+        <p>Theo dõi và cập nhật trạng thái: Chờ giặt, Đang giặt, Đã xong, Đã giao.</p>
+    </div>
+    <a href="/orders/create" class="btn btn-primary">{{> icon name="plus"}} Tạo đơn hàng</a>
+</div>
+
+{{#if notice}}<div class="field-error">{{notice}}</div>{{/if}}
+
+<div class="card flush">
+    <form method="GET" action="/admin/orders" class="toolbar">
+        <div class="tabs">
+            {{#each tabs}}
+            <a href="{{href}}" class="{{#if active}}active{{/if}}">{{label}} ({{count}})</a>
+            {{/each}}
+        </div>
+        {{#if status}}<input type="hidden" name="status" value="{{status}}">{{/if}}
+        <span class="grow"></span>
+        <input class="field-input" type="search" name="q" value="{{q}}" placeholder="Tìm theo mã đơn..." aria-label="Tìm theo mã đơn">
+        <button type="submit" class="btn btn-secondary">{{> icon name="search"}} Tìm</button>
+    </form>
+
+    {{#if orders.length}}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Khách hàng</th>
+                    <th>Dịch vụ</th>
+                    <th>Ngày nhận</th>
+                    <th>Hẹn trả</th>
+                    <th class="num">Tổng tiền</th>
+                    <th>Thanh toán</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each orders}}
+                <tr>
+                    <td class="mono nowrap"><a href="/orders/invoice/{{_id}}">{{code}}</a></td>
+                    <td>
+                        {{#if customer}}<b>{{customer.name}}</b><br><span class="muted">{{customer.phone}}</span>{{else}}—{{/if}}
+                    </td>
+                    <td>{{serviceSummary}}</td>
+                    <td class="nowrap">{{dateFormat receivedDate}}</td>
+                    <td class="nowrap">{{dateFormat returnDate}}</td>
+                    <td class="num nowrap">{{formatPrice totalAmount}}</td>
+                    <td>
+                        <span class="badge {{payStatusClass paymentStatus}}">{{payStatusLabel paymentStatus}}</span><br>
+                        <span class="muted">{{payLabel paymentMethod}}</span>
+                    </td>
+                    <td><span class="status-badge {{statusClass status}}">{{statusLabel status}}</span></td>
+                    <td>
+                        {{#if canCollect}}<a href="/orders/invoice/{{_id}}#thu-tien" class="btn btn-primary btn-sm">Thu tiền</a>{{/if}}
+                        {{#if canEdit}}<a href="/orders/{{_id}}/edit" class="btn btn-secondary btn-sm">Sửa</a>{{/if}}
+                        {{#if nextStatus}}
+                        <form action="/admin/orders/{{_id}}/status" method="POST" class="table-actions">
+{{> csrf}}
+                            <input type="hidden" name="backTo" value="{{../backTo}}">
+                            <button type="submit" class="btn btn-secondary btn-sm">Chuyển: {{nextLabel}}</button>
+                        </form>
+                        {{else}}
+                        {{#if isCancelled}}<span class="muted">Đã hủy</span>{{else}}<span class="muted">Hoàn tất</span>{{/if}}
+                        {{/if}}
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination">
+        {{#if hasPrev}}<a href="{{prevHref}}">&laquo; Trước</a>{{/if}}
+        <span>Trang {{currentPage}} / {{totalPages}} &middot; {{total}} đơn</span>
+        {{#if hasNext}}<a href="{{nextHref}}">Sau &raquo;</a>{{/if}}
+    </div>
+    {{else}}
+    <div class="empty-state">
+        Không có đơn hàng nào phù hợp.
+        <small>Thử đổi bộ lọc hoặc <a href="/orders/create">tạo đơn hàng mới</a>.</small>
+    </div>
+    {{/if}}
+</div>

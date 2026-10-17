@@ -1,0 +1,44 @@
+<div class="card form-narrow">
+  <form method="POST"
+        action="{{#if supply}}/supplies/{{supply._id}}?_method=PUT{{else}}/supplies{{/if}}">
+{{> csrf}}
+{{#if error}}<div class="alert alert-danger">{{error}}</div>{{/if}}
+
+    <div class="field-group">
+      <label class="field-label" for="name">Tên vật tư</label>
+      <input class="field-input" id="name" name="name" value="{{supply.name}}" placeholder="Xà phòng, Nước xả, Bao bì..." required>
+    </div>
+
+    <div class="field-row">
+      <div class="field-group">
+        <label class="field-label" for="unit">Đơn vị</label>
+        <input class="field-input" id="unit" name="unit" value="{{#if supply}}{{supply.unit}}{{else}}cái{{/if}}">
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="quantity">Số lượng tồn</label>
+        <input class="field-input" id="quantity" type="number" name="quantity" min="0" value="{{#if supply}}{{supply.quantity}}{{else}}0{{/if}}">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field-group">
+        <label class="field-label" for="minStock">Ngưỡng cảnh báo sắp hết</label>
+        <input class="field-input" id="minStock" type="number" name="minStock" min="0" value="{{#if supply}}{{supply.minStock}}{{else}}5{{/if}}">
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="price">Giá nhập (đ)</label>
+        <input class="field-input" id="price" type="number" name="price" min="0" value="{{#if supply}}{{supply.price}}{{else}}0{{/if}}">
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="note">Ghi chú</label>
+      <input class="field-input" id="note" name="note" value="{{supply.note}}">
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Lưu</button>
+      <a href="/supplies" class="btn btn-secondary">Hủy</a>
+    </div>
+  </form>
+</div>

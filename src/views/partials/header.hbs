@@ -1,0 +1,36 @@
+<header class="site-header">
+    <div class="container">
+        <a href="/" class="site-logo">
+            <span class="logo-mark">{{> icon name="logo"}}</span>
+            <span>Tiệm Giặt Là</span>
+        </a>
+
+        <nav class="nav-links" aria-label="Điều hướng chính">
+            <a href="/" class="{{isExact currentPath '/'}}">Trang chủ</a>
+            <a href="/#bang-gia">Bảng giá</a>
+            <a href="/tips" class="{{isActive currentPath '/tips'}}">Mẹo giặt</a>
+
+            {{#if currentCustomer}}
+                <a href="/me/history" class="{{isActive currentPath '/me/history'}}">Lịch sử giặt</a>
+                <a href="/me/profile" class="{{isActive currentPath "/me/profile"}}">Hồ sơ</a>
+                {{#if isStaff}}<a href="/admin">Quản trị</a>{{/if}}
+                {{#if isStaff}}<a href="/orders/create" class="nav-cta">Tạo đơn hàng</a>{{/if}}
+
+                <span class="nav-sep"></span>
+
+                <span class="nav-user">
+                    <span class="avatar">{{initials currentCustomer.name}}</span>
+                    <span>{{currentCustomer.name}}</span>
+                </span>
+                <form action="/auth/logout" method="POST">
+{{> csrf}}
+                    <button type="submit" class="btn-link">Thoát</button>
+                </form>
+            {{else}}
+                <span class="nav-sep"></span>
+                <a href="/auth/login" class="{{isActive currentPath '/auth/login'}}">Đăng nhập</a>
+                <a href="/auth/register" class="nav-cta">Đăng ký</a>
+            {{/if}}
+        </nav>
+    </div>
+</header>

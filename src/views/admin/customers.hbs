@@ -1,0 +1,78 @@
+<div class="page-head">
+    <div>
+        <h1>Khách hàng</h1>
+        <p>Tìm khách, thêm khách vãng lai (chỉ cần tên và số điện thoại) và cấp mật khẩu đăng nhập khi khách yêu cầu.</p>
+    </div>
+    <a href="/orders/create" class="btn btn-primary">{{> icon name="plus"}} Tạo đơn hàng</a>
+</div>
+
+{{#if success}}<div class="field-success">{{success}}</div>{{/if}}
+{{#if error}}<div class="field-error">{{error}}</div>{{/if}}
+{{#if resetLink}}
+<div class="card" style="margin-bottom:1.25rem;">
+    <label class="field-label" for="resetLink">Link đặt lại mật khẩu</label>
+    <input class="field-input" id="resetLink" type="text" value="{{resetLink}}" readonly onfocus="this.select()">
+    <span class="field-hint">Chỉ hiển thị một lần. Đưa link cho khách để khách tự đặt mật khẩu mới.</span>
+</div>
+{{/if}}
+
+<div class="card" style="margin-bottom:1.25rem;">
+    <h3>Thêm khách vãng lai</h3>
+    <form action="/admin/customers" method="POST" class="svc-edit">
+        {{> csrf}}
+        <input class="field-input" type="text" name="name" value="{{old.name}}" maxlength="255" required placeholder="Họ tên" aria-label="Họ tên">
+        <input class="field-input" type="tel" name="phone" value="{{old.phone}}" maxlength="10" required placeholder="Số điện thoại" aria-label="Số điện thoại">
+        <input class="field-input" type="text" name="address" value="{{old.address}}" maxlength="500" placeholder="Địa chỉ (tùy chọn)" aria-label="Địa chỉ">
+        <button type="submit" class="btn btn-primary">Thêm khách</button>
+    </form>
+</div>
+
+<div class="card flush">
+    <form method="GET" action="/admin/customers" class="toolbar">
+        <input class="field-input" type="search" name="q" value="{{q}}" placeholder="Tìm theo tên, số điện thoại hoặc mã KH..." aria-label="Tìm khách hàng">
+        <button type="submit" class="btn btn-secondary">{{> icon name="search"}} Tìm</button>
+    </form>
+
+    {{#if customers.length}}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Mã KH</th><th>Họ tên</th><th>Số điện thoại</th><th class="num">Điểm</th><th>Tài khoản</th><th>Thao tác</th></tr>
+            </thead>
+            <tbody>
+                {{#each customers}}
+                <tr>
+                    <td class="mono nowrap">{{code}}</td>
+                    <td><b>{{name}}</b>{{#if address}}<br><span class="muted">{{address}}</span>{{/if}}</td>
+                    <td class="nowrap">{{phone}}</td>
+                    <td class="num">{{formatNumber points}}</td>
+                    <td>
+                        {{#if noAccount}}<span class="badge badge-warn">Chưa có tài khoản</span>
+                        {{else}}<span class="badge badge-ok">{{roleLabel role}}</span>{{/if}}
+                    </td>
+                    <td>
+                        <a href="/orders/create?customer={{code}}" class="btn btn-secondary btn-sm">Tạo đơn</a>
+                        {{#if canReset}}
+                        <form action="/admin/customers/{{_id}}/reset-link" method="POST" style="display:inline;">
+                            {{> csrf}}
+                            <button type="submit" class="btn btn-secondary btn-sm" onclick="return confirm('Tạo link đặt lại mật khẩu cho {{name}}? Chỉ làm khi đã xác minh đúng khách tại quầy.')">Quên mật khẩu</button>
+                        </form>
+                        {{/if}}
+                        {{#if noAccount}}
+                        <form action="/admin/customers/{{_id}}/activate" method="POST" class="svc-edit" style="margin-top:.4rem;">
+                            {{> csrf}}
+                            <input class="field-input" type="text" name="password" minlength="8" maxlength="72" required placeholder="Mật khẩu (≥ 8 ký tự)" autocomplete="off" aria-label="Mật khẩu cấp cho {{name}}">
+                            <button type="submit" class="btn btn-secondary btn-sm" onclick="return confirm('Cấp tài khoản đăng nhập cho {{name}}? Chỉ làm khi đã xác minh đúng khách tại quầy.')">Cấp tài khoản</button>
+                        </form>
+                        {{/if}}
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    <div class="note" style="padding:.75rem 1.25rem;">Hiển thị tối đa 50 khách mới nhất khớp từ khóa.</div>
+    {{else}}
+    <div class="empty-state">Không tìm thấy khách hàng nào.<small>Thử từ khóa khác hoặc thêm khách vãng lai ở trên.</small></div>
+    {{/if}}
+</div>
