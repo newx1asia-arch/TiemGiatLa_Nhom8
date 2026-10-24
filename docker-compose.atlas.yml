@@ -1,0 +1,31 @@
+# CÁCH 2: dùng MongoDB Atlas (đám mây) - không chạy Mongo trong Docker.
+# Cần MONGODB_URI thật trong .env (mongodb+srv://...) và đã thêm IP máy chủ vào Atlas > Network Access.
+#   docker compose -f docker-compose.atlas.yml up -d --build
+# Lưu ý: scripts/backup.sh chỉ dùng cho CÁCH 1; với Atlas hãy bật backup ngay trên Atlas.
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env          # MONGODB_URI lấy từ đây
+    environment:
+      NODE_ENV: production
+      TRUST_PROXY: "1"
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      - app
+
+volumes:
+  caddy-data:

@@ -1,0 +1,9 @@
+{{!-- Biểu đồ tròn + chú thích. Dùng: {{> donut chart=statusChart}}  hoặc  {{> donut chart=x money=true}} --}}
+<div class="donut-wrap">
+    {{{chart.svg}}}
+    <ul class="legend">
+        {{#each chart.legend}}
+        <li><i style="background: {{color}}"></i><span>{{label}}</span><b>{{#if ../money}}{{formatPrice value}}{{else}}{{formatNumber value}}{{/if}}</b><span class="pct">{{percent}}%</span></li>
+        {{/each}}
+    </ul>
+</div>

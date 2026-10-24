@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{#if pageTitle}}{{pageTitle}} · {{/if}}Quản trị · Tiệm Giặt Là</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="admin">
+    {{> icons}}
+
+    <aside class="sidebar">
+        <a href="/admin" class="sidebar-brand">
+            <span class="logo-mark">{{> icon name="logo"}}</span>
+            <span>Tiệm Giặt Là<small>Khu vực quản trị</small></span>
+        </a>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-label">Vận hành</div>
+            <a href="/admin" class="{{isExact currentPath '/admin'}}">{{> icon name="dashboard"}} Tổng quan</a>
+            <a href="/admin/orders" class="{{isActive currentPath '/admin/orders'}}">{{> icon name="orders"}} Đơn hàng</a>
+            <a href="/admin/scan" class="{{isActive currentPath '/admin/scan'}}">{{> icon name="search"}} Quét mã đơn</a>
+            <a href="/orders/create" class="{{isActive currentPath '/orders'}}">{{> icon name="plus"}} Tạo đơn hàng</a>
+            <a href="/admin/customers" class="{{isActive currentPath '/admin/customers'}}">{{> icon name="user"}} Khách hàng</a>
+            <a href="/admin/topup" class="{{isActive currentPath '/admin/topup'}}">{{> icon name="card"}} Nạp thẻ trả trước</a>
+
+            <div class="sidebar-label">Kho</div>
+            <a href="/supplies" class="{{isActive currentPath '/supplies'}}">{{> icon name="package"}} Kho vật tư</a>
+
+            {{#if isOwner}}
+            <div class="sidebar-label">Chủ tiệm</div>
+            <a href="/admin/services" class="{{isActive currentPath '/admin/services'}}">{{> icon name="orders"}} Bảng giá dịch vụ</a>
+            <a href="/admin/reports" class="{{isActive currentPath '/admin/reports'}}">{{> icon name="trend"}} Báo cáo doanh thu</a>
+            <a href="/admin/staff" class="{{isActive currentPath '/admin/staff'}}">{{> icon name="user"}} Nhân viên</a>
+            {{/if}}
+
+            <div class="sidebar-label">Khác</div>
+            <a href="/">{{> icon name="arrow"}} Xem trang khách hàng</a>
+        </nav>
+
+        <div class="sidebar-foot">
+            <div class="sidebar-user">
+                <span class="avatar">{{initials currentCustomer.name}}</span>
+                <span>{{currentCustomer.name}}<small>{{roleLabel currentCustomer.role}}</small></span>
+            </div>
+            <form action="/auth/logout" method="POST">
+{{> csrf}}
+                <button type="submit" class="btn-link">{{> icon name="logout"}} Đăng xuất</button>
+            </form>
+        </div>
+    </aside>
+
+    <div class="app-main">
+        <header class="topbar">
+            <div class="crumbs"><a href="/admin">Quản trị</a><span>/</span><b>{{pageTitle}}</b></div>
+            <div class="topbar-actions">
+                <span class="today">{{today}}</span>
+                {{#unless (isExact currentPath '/orders/create')}}<a href="/orders/create" class="btn btn-primary btn-sm">+ Tạo đơn</a>{{/unless}}
+            </div>
+        </header>
+        <main class="app-content">
+            {{{body}}}
+        </main>
+    </div>
+
+    {{> toast}}
+</body>
+</html>

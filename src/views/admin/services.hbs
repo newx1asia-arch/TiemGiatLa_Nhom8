@@ -1,0 +1,78 @@
+<div class="page-head">
+    <div>
+        <h1>Bảng giá dịch vụ</h1>
+        <p>Chỉ chủ tiệm sửa được. Giá mới áp dụng cho đơn lập SAU đó; đơn đã lập giữ nguyên giá đã báo khách. Dòng "Giặt sấy theo ký" là giá mỗi kg (áp dụng từ 1 kg); các món đồ được tính theo món khi túi đồ dưới 1 kg.</p>
+    </div>
+</div>
+
+{{#if success}}<div class="field-success">{{success}}</div>{{/if}}
+{{#if error}}<div class="field-error">{{error}}</div>{{/if}}
+
+<div class="card flush">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên dịch vụ</th>
+                    <th>Đơn vị</th>
+                    <th>Đơn giá (đ)</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each services}}
+                <tr>
+                    <td colspan="3">
+                        <form action="/admin/services/{{_id}}" method="POST" class="svc-edit">
+                            {{> csrf}}
+                            <input class="field-input" type="text" name="name" value="{{name}}" maxlength="60" required aria-label="Tên dịch vụ">
+                            {{#if lockedUnit}}
+                            <input class="field-input" type="text" value="{{unit}}" disabled aria-label="Đơn vị tính">
+                            {{else}}
+                            <select class="field-select" name="unit" aria-label="Đơn vị tính">
+                                {{#each unitOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{value}}</option>{{/each}}
+                            </select>
+                            {{/if}}
+                            <input class="field-input" type="number" name="price" value="{{price}}" min="1000" max="10000000" step="500" required aria-label="Đơn giá">
+                            {{#if isGarment}}
+                            <label class="tag tag-soft" style="cursor:pointer;"><input type="checkbox" name="byWeight" {{#if byWeight}}checked{{/if}}> gộp vào giá ký</label>
+                            {{/if}}
+                            {{#if isWeight}}<span class="tag tag-soft">giá theo ký</span>{{/if}}
+                            <button type="submit" class="btn btn-primary btn-sm">Lưu</button>
+                        </form>
+                    </td>
+                    <td>{{#if active}}<span class="badge badge-ok">Đang bán</span>{{else}}<span class="badge badge-warn">Đã ẩn</span>{{/if}}</td>
+                    <td>
+                        {{#unless isWeight}}
+                        <form action="/admin/services/{{_id}}/toggle" method="POST" class="table-actions">
+                            {{> csrf}}
+                            <button type="submit" class="btn btn-secondary btn-sm">{{#if active}}Ẩn{{else}}Hiện lại{{/if}}</button>
+                        </form>
+                        {{/unless}}
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card" style="margin-top:1.25rem;">
+    <h3>Thêm dịch vụ mới</h3>
+    <form action="/admin/services" method="POST" class="svc-edit">
+        {{> csrf}}
+        <input class="field-input" type="text" name="name" value="{{old.name}}" maxlength="60" required placeholder="Tên dịch vụ, VD: Giặt Áo Dài" aria-label="Tên dịch vụ mới">
+        <select class="field-select" name="category" aria-label="Loại">
+            <option value="service">Dịch vụ tính theo đơn vị</option>
+            <option value="garment">Món đồ (tính theo món)</option>
+        </select>
+        <select class="field-select" name="unit" aria-label="Đơn vị tính">
+            {{#each unitOptions}}<option value="{{value}}">{{value}}</option>{{/each}}
+        </select>
+        <label class="tag tag-soft" style="cursor:pointer;"><input type="checkbox" name="byWeight"> món đồ gộp vào giá ký</label>
+        <input class="field-input" type="number" name="price" value="{{old.price}}" min="1000" max="10000000" step="500" required placeholder="Đơn giá" aria-label="Đơn giá mới">
+        <button type="submit" class="btn btn-primary">Thêm dịch vụ</button>
+    </form>
+    <span class="field-hint">Đơn vị "kg" cho nhập số lẻ (VD: 2,5 kg); các đơn vị khác chỉ nhập số nguyên. Với "Món đồ", đơn vị luôn là món và bỏ qua ô đơn vị bên cạnh. Dịch vụ không xóa được, chỉ ẩn để lịch sử đơn vẫn đối chiếu.</span>
+</div>

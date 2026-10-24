@@ -1,0 +1,102 @@
+<div class="pf" data-points="{{customer.points}}" data-lifetime="{{customer.lifetimePoints}}">
+
+    <div class="page-head">
+        <h1>Hồ sơ của tôi</h1>
+    </div>
+
+    <!-- Thẻ thành viên -->
+    <section class="card">
+        <div class="profile-head">
+            <span class="avatar">{{initials customer.name}}</span>
+            <div>
+                <h2>{{customer.name}}</h2>
+                <span class="customer-code">{{customer.code}}</span>
+            </div>
+            <span class="tier t0 tier-badge" id="pfTier">Đồng</span>
+        </div>
+
+        <div class="meter">
+            <div class="meter-top">
+                <span id="pfNow">Thành viên Đồng</span>
+                <span id="pfNext">Còn 100 điểm để lên hạng Bạc</span>
+            </div>
+            <div class="progress-track"><i id="pfFill"></i></div>
+        </div>
+    </section>
+
+    <!-- Thống kê -->
+    <section class="profile-stats">
+        <div class="stat">
+            <div class="stat-label">Điểm tích lũy</div>
+            <div class="stat-value">{{#if customer.points}}{{customer.points}}{{else}}0{{/if}}</div>
+        </div>
+        <div class="stat ok">
+            <div class="stat-label">Số đơn đã gửi</div>
+            <div class="stat-value">{{#if orderCount}}{{orderCount}}{{else}}0{{/if}}</div>
+        </div>
+        <div class="stat warn">
+            <div class="stat-label">Hạng thành viên</div>
+            <div class="stat-value" id="pfTierName">Đồng</div>
+        </div>
+    </section>
+
+    <p class="field-hint">Tích điểm: mỗi {{formatPrice loyalty.earnUnit}} thanh toán được 1 điểm. Dùng điểm: 1 điểm giảm {{formatPrice loyalty.pointValue}}, tối đa {{loyalty.maxRedeemPercent}}% giá trị đơn. Điểm được cộng sau khi đơn được thanh toán.</p>
+
+    <div class="profile-grid">
+        <section class="card">
+            <h3>Thông tin liên hệ</h3>
+            <ul class="info-list">
+                <li><span>Mã khách hàng</span><b class="mono">{{customer.code}}</b></li>
+                <li><span>Số điện thoại</span><b>{{customer.phone}}</b></li>
+                <li><span>Email</span><b>{{#if customer.email}}{{customer.email}}{{else}}<em>Chưa cập nhật</em>{{/if}}</b></li>
+                <li><span>Địa chỉ</span><b>{{#if customer.address}}{{customer.address}}{{else}}<em>Chưa cập nhật</em>{{/if}}</b></li>
+                <li><span>Ngày tham gia</span><b>{{dateFormat customer.createdAt}}</b></li>
+            </ul>
+        </section>
+
+        <section class="card">
+            <h3>Dịch vụ của tôi</h3>
+            <div class="action-list">
+                {{#if isStaff}}<a href="/orders/create" class="main">{{> icon name="plus"}}<span><b>Tạo đơn giặt mới</b><small>Lập đơn tại quầy</small></span></a>{{/if}}
+                <a href="/me/history">{{> icon name="clock"}}<span><b>Lịch sử giặt</b><small>Xem các đơn đã gửi</small></span></a>
+                <a href="/me/card">{{> icon name="card"}}<span><b>Thẻ trả trước</b><small>Số dư và giao dịch</small></span></a>
+                <a href="/me/profile/edit">{{> icon name="edit"}}<span><b>Chỉnh sửa thông tin</b><small>Cập nhật email, địa chỉ</small></span></a>
+                <a href="/me/change-password">{{> icon name="lock"}}<span><b>Đổi mật khẩu</b><small>Bảo vệ tài khoản</small></span></a>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+(function () {
+    // Mốc điểm các hạng: sửa theo quy định của tiệm
+    var tiers = [
+        { name: 'Đồng',      min: 0,   cls: 't0' },
+        { name: 'Bạc',       min: 100, cls: 't1' },
+        { name: 'Vàng',      min: 300, cls: 't2' },
+        { name: 'Kim cương', min: 600, cls: 't3' }
+    ];
+    // Hạng xét theo TỔNG điểm đã tích (không bị tụt hạng khi tiêu điểm)
+    var pf = document.querySelector('.pf');
+    var pts = Math.max(parseInt(pf.dataset.points, 10) || 0, parseInt(pf.dataset.lifetime, 10) || 0);
+
+    var idx = 0;
+    tiers.forEach(function (t, i) { if (pts >= t.min) idx = i; });
+    var cur = tiers[idx], next = tiers[idx + 1];
+
+    document.getElementById('pfTierName').textContent = cur.name;
+    var badge = document.getElementById('pfTier');
+    badge.textContent = cur.name;
+    badge.className = 'tier tier-badge ' + cur.cls;
+    document.getElementById('pfNow').textContent = 'Thành viên ' + cur.name;
+
+    var percent = 100;
+    if (next) {
+        percent = Math.round(((pts - cur.min) / (next.min - cur.min)) * 100);
+        document.getElementById('pfNext').textContent = 'Còn ' + (next.min - pts) + ' điểm để lên hạng ' + next.name;
+    } else {
+        document.getElementById('pfNext').textContent = 'Đã đạt hạng cao nhất';
+    }
+    document.getElementById('pfFill').style.width = Math.max(percent, 3) + '%';
+})();
+</script>

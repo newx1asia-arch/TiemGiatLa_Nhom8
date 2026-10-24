@@ -1,0 +1,6 @@
+# {$DOMAIN} lấy từ biến DOMAIN trong .env (VD: tiemgiatla.example.com). Caddy tự xin và gia hạn chứng chỉ HTTPS.
+# Khi DOMAIN=localhost, Caddy dùng chứng chỉ nội bộ để thử trên máy.
+{$DOMAIN} {
+    encode gzip
+    reverse_proxy app:3000
+}

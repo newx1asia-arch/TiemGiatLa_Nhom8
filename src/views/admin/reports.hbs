@@ -1,0 +1,123 @@
+<div class="page-head">
+    <div>
+        <h1>Báo cáo doanh thu</h1>
+        <p>Chỉ chủ tiệm xem được. Doanh số tính theo ngày tạo đơn · {{rangeLabel}}.</p>
+    </div>
+</div>
+
+<div class="tabs mb">
+    {{#each ranges}}
+    <a href="/admin/reports?range={{key}}" class="{{#if active}}active{{/if}}">{{label}}</a>
+    {{/each}}
+</div>
+
+<div class="stat-grid">
+    <div class="stat ok">
+        <div class="stat-label">{{> icon name="trend"}} Tổng doanh số</div>
+        <div class="stat-value">{{formatPrice totalRevenue}}</div>
+        <div class="stat-sub">{{rangeLabel}}</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">{{> icon name="orders"}} Số đơn hàng</div>
+        <div class="stat-value">{{formatNumber totalOrders}}</div>
+        <div class="stat-sub">Đã lập trong kỳ</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">{{> icon name="tag"}} Giá trị trung bình</div>
+        <div class="stat-value">{{formatPrice avgOrder}}</div>
+        <div class="stat-sub">Mỗi đơn hàng</div>
+    </div>
+    <div class="stat {{#if unpaid.orders}}warn{{/if}}">
+        <div class="stat-label">{{> icon name="alert"}} Chưa thanh toán</div>
+        <div class="stat-value">{{formatPrice unpaid.total}}</div>
+        <div class="stat-sub">{{unpaid.orders}} đơn</div>
+    </div>
+</div>
+
+<section class="card">
+    <div class="card-head">
+        <h3>Doanh số theo {{unit}}</h3>
+        <span class="muted">{{formatPrice totalRevenue}}</span>
+    </div>
+    {{{revenueChart}}}
+</section>
+
+<section class="card">
+    <div class="card-head"><h3>Số đơn theo {{unit}}</h3></div>
+    {{{ordersChart}}}
+</section>
+
+<div class="dash-grid even">
+    <section class="card">
+        <div class="card-head"><h3>Dịch vụ dùng nhiều nhất</h3></div>
+        {{#if byService.length}}
+        {{> donut chart=serviceChart money=true}}
+        <ul class="progress-list" style="margin-top: 1rem;">
+            {{#each byService}}
+            <li>
+                <div class="progress-top"><span>{{_id}} <span class="muted">({{orders}} lượt)</span></span><b>{{formatPrice revenue}}</b></div>
+                <div class="progress-track"><i style="width: {{percent}}%"></i></div>
+            </li>
+            {{/each}}
+        </ul>
+        {{else}}
+        <div class="empty-state">Chưa có dữ liệu trong kỳ này.</div>
+        {{/if}}
+    </section>
+
+    <section class="card">
+        <div class="card-head"><h3>Theo phương thức thanh toán</h3></div>
+        {{#if byPayment.length}}
+        {{> donut chart=paymentChart money=true}}
+        <ul class="progress-list" style="margin-top: 1rem;">
+            {{#each byPayment}}
+            <li>
+                <div class="progress-top"><span>{{payLabel _id}} <span class="muted">({{orders}} đơn)</span></span><b>{{formatPrice revenue}}</b></div>
+                <div class="progress-track"><i style="width: {{percent}}%"></i></div>
+            </li>
+            {{/each}}
+        </ul>
+        {{else}}
+        <div class="empty-state">Chưa có dữ liệu trong kỳ này.</div>
+        {{/if}}
+    </section>
+</div>
+
+<div class="dash-grid even">
+    <section class="card flush">
+        <div class="card-head"><h3>Doanh số theo người lập đơn</h3></div>
+        {{#if byStaff.length}}
+        <div style="padding: 1rem 1.25rem 0;">{{> donut chart=staffChart money=true}}</div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Người lập đơn</th><th class="num">Số đơn</th><th class="num">Doanh số</th></tr></thead>
+                <tbody>
+                    {{#each byStaff}}
+                    <tr><td>{{name}}</td><td class="num">{{orders}}</td><td class="num">{{formatPrice revenue}}</td></tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}
+        <div class="empty-state">Chưa có dữ liệu trong kỳ này.</div>
+        {{/if}}
+    </section>
+
+    <section class="card flush">
+        <div class="card-head"><h3>Chi tiết theo {{unit}}</h3></div>
+        {{#if detail.length}}
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>{{#eq unit 'tháng'}}Tháng{{else}}Ngày{{/eq}}</th><th class="num">Số đơn</th><th class="num">Doanh số</th></tr></thead>
+                <tbody>
+                    {{#each detail}}
+                    <tr><td>{{label}}</td><td class="num">{{orders}}</td><td class="num">{{formatPrice total}}</td></tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}
+        <div class="empty-state">Chưa có đơn hàng trong kỳ này.</div>
+        {{/if}}
+    </section>
+</div>

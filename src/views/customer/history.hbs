@@ -1,0 +1,53 @@
+<div class="page-head">
+    <div>
+        <h1>Lịch sử giặt</h1>
+        <p>Các đơn hàng bạn đã gửi tại tiệm.</p>
+    </div>
+</div>
+
+<div class="card flush">
+    {{#if orders.length}}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Ngày nhận</th>
+                    <th>Ngày trả</th>
+                    <th>Trạng thái</th>
+                    <th class="num">Tổng tiền</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each orders}}
+                <tr>
+                    <td class="mono">{{this.code}}</td>
+                    <td>{{dateFormat this.receivedDate}}</td>
+                    <td>{{#if this.returnDate}}{{dateFormat this.returnDate}}{{else}}—{{/if}}</td>
+                    <td><span class="status-badge {{statusClass this.status}}">{{statusLabel this.status}}</span></td>
+                    <td class="num">{{formatPrice this.totalAmount}}</td>
+                    <td class="text-right"><a href="/orders/invoice/{{this._id}}">Xem hóa đơn</a></td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+
+    {{#if totalPages}}
+    <div class="pagination">
+        {{#if hasPrev}}<a href="/me/history?page={{prevPage}}">&laquo; Trước</a>{{/if}}
+        <span>Trang {{currentPage}} / {{totalPages}}</span>
+        {{#if hasNext}}<a href="/me/history?page={{nextPage}}">Sau &raquo;</a>{{/if}}
+    </div>
+    {{/if}}
+
+    {{else}}
+    <div class="empty-state">
+        Bạn chưa có đơn giặt nào.
+        <small>Đơn hàng sẽ xuất hiện tại đây sau khi tiệm lập đơn cho bạn.</small>
+    </div>
+    {{/if}}
+</div>
+
+<a href="/me/profile" class="back-link">&larr; Quay lại hồ sơ</a>

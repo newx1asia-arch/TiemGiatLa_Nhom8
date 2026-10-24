@@ -1,0 +1,29 @@
+<div class="article">
+    <a href="/" class="back-link">&larr; Về trang chủ</a>
+
+    <article class="card">
+        <span class="hero-tag">Mẹo giặt hữu ích</span>
+        <h1>{{tip.title}}</h1>
+        <p class="lead">{{tip.lead}}</p>
+
+        {{#each tip.sections}}
+            <h2>{{h}}</h2>
+            <ul>
+                {{#each items}}<li>{{this}}</li>{{/each}}
+            </ul>
+        {{/each}}
+
+        <div class="callout"><b>Lưu ý:</b> với đồ quý hoặc khó xử lý, hãy mang đến tiệm để nhân viên kiểm tra và tư vấn.</div>
+
+        {{#if isStaff}}<a href="/orders/create" class="btn btn-primary">Tạo đơn hàng</a>{{else}}<a href="/#bang-gia" class="btn btn-primary">Xem bảng giá</a>{{/if}}
+    </article>
+</div>
+
+<section class="related">
+    <h3>Bài viết khác</h3>
+    <div class="tip-list">
+        {{#each others}}
+            <a href="/tips/{{slug}}"><span>{{title}}</span>{{> icon name="arrow"}}</a>
+        {{/each}}
+    </div>
+</section>

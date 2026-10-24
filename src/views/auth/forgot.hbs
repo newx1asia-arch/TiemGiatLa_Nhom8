@@ -1,0 +1,25 @@
+<div class="card auth-card">
+    <h1 class="page-title">Quên mật khẩu</h1>
+
+    {{#if success}}<div class="field-success">{{success}}</div>{{/if}}
+    {{#if error}}<div class="field-error">{{error}}</div>{{/if}}
+
+    {{#unless sent}}
+    <p class="muted">Nhập số điện thoại và email bạn đã cập nhật trong hồ sơ. Chúng tôi sẽ gửi link đặt lại mật khẩu về email đó.</p>
+    <form method="POST" action="/auth/forgot">
+{{> csrf}}
+        <div class="field-group">
+            <label class="field-label" for="phone">Số điện thoại</label>
+            <input class="field-input" id="phone" type="tel" name="phone" value="{{old.phone}}" maxlength="10" autocomplete="username" required autofocus>
+        </div>
+        <div class="field-group">
+            <label class="field-label" for="email">Email đã đăng ký</label>
+            <input class="field-input" id="email" type="email" name="email" value="{{old.email}}" maxlength="255" autocomplete="email" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Gửi link đặt lại mật khẩu</button>
+    </form>
+    {{/unless}}
+
+    <p class="form-footer muted">Chưa có email trong hồ sơ hoặc không nhận được thư? Hãy đến quầy, nhân viên sẽ hỗ trợ đặt lại mật khẩu sau khi xác minh bạn.</p>
+    <p class="form-footer"><a href="/auth/login">← Quay lại đăng nhập</a></p>
+</div>

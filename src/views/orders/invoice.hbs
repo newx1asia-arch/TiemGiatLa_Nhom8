@@ -1,0 +1,256 @@
+{{#if error}}<div class="field-error no-print">{{error}}</div>{{/if}}
+{{#if success}}<div class="field-success no-print">{{success}}</div>{{/if}}
+{{#if refundNote}}<div class="field-error no-print"><b>Cần làm tiếp:</b> {{refundNote}}</div>{{/if}}
+
+<div class="invoice card">
+    <div class="invoice-head">
+        <div>
+            <h2>Hóa đơn dịch vụ giặt là</h2>
+            <span class="muted">Tiệm Giặt Là</span>
+        </div>
+        <div class="text-right">
+            <div class="muted">Mã đơn hàng</div>
+            <div class="invoice-code">{{order.code}}</div>
+            {{#if barcode}}<div class="invoice-barcode">{{{barcode}}}</div>{{/if}}
+        </div>
+    </div>
+
+    {{#if cancelled}}
+    <div class="field-error" style="margin-top:1rem;">
+        <b>ĐƠN ĐÃ HỦY</b>{{#if order.cancelledAt}} lúc {{dateTimeFormat order.cancelledAt}}{{/if}}{{#if order.cancelReason}} · Lý do: {{order.cancelReason}}{{/if}}
+    </div>
+    {{/if}}
+
+    <div class="invoice-meta">
+        <div>
+            <h4>Khách hàng</h4>
+            <p><b>{{order.customer.name}}</b></p>
+            <p>{{order.customer.phone}}</p>
+            {{#if order.customer.code}}<p class="mono">{{order.customer.code}}</p>{{/if}}
+        </div>
+        <div>
+            <h4>Thông tin đơn</h4>
+            <p>Ngày tạo: <b>{{dateTimeFormat order.createdAt}}</b></p>
+            <p>Ngày hẹn trả: <b>{{dateFormat order.returnDate}}</b></p>
+            <p>Trạng thái: <span class="status-badge {{statusClass order.status}}">{{statusLabel order.status}}</span></p>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Dịch vụ</th>
+                    <th class="num">Đơn giá</th>
+                    <th class="num">Số lượng</th>
+                    <th class="num">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each order.services}}
+                <tr>
+                    <td>{{this.serviceName}}{{#if this.note}}<br><small class="inc-note">{{this.note}}</small>{{/if}}</td>
+                    {{#if this.included}}
+                    <td class="num inc-note" colspan="2">{{this.quantity}} {{this.unit}} · đã gồm trong giá ký</td>
+                    <td class="num">0đ</td>
+                    {{else}}
+                    <td class="num">{{formatPrice this.unitPrice}}{{#if this.unit}}/{{this.unit}}{{/if}}</td>
+                    <td class="num">{{this.quantity}}{{#if this.unit}} {{this.unit}}{{/if}}</td>
+                    <td class="num">{{formatPrice this.subtotal}}</td>
+                    {{/if}}
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+
+    {{#if order.pieces.length}}
+    <h4 style="margin:1.25rem 0 .5rem;">Chi tiết từng món ({{order.pieces.length}})</h4>
+    <div class="table-wrap">
+        <table class="inv-pieces">
+            <thead><tr><th>Mã tem</th><th>Món</th><th>Đặc điểm</th><th>Tình trạng</th><th>Xử lý</th></tr></thead>
+            <tbody>
+                {{#each order.pieces}}
+                <tr>
+                    <td><b>{{this.tag}}</b></td>
+                    <td>{{this.typeName}}</td>
+                    <td>{{#if this.color}}{{this.color}}{{/if}}{{#if this.material}} · {{this.material}}{{/if}}{{#if this.brand}} · {{this.brand}}{{/if}}</td>
+                    <td>{{#each this.conditions}}<span class="tag tag-warn">{{this}}</span> {{/each}}{{#if this.note}}<br><small>{{this.note}}</small>{{/if}}</td>
+                    <td>{{this.process}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    {{/if}}
+
+    {{#if order.weightKg}}
+    <div class="invoice-note"><b>Cân túi đồ:</b> {{order.weightKg}} kg
+        {{#eq order.pricingMode "weight"}}· tính theo ký{{else}}· dưới 1 kg nên tính theo từng món{{/eq}}
+    </div>
+    {{/if}}
+
+    {{#if order.note}}
+    <div class="invoice-note"><b>Ghi chú đồ:</b> {{order.note}}</div>
+    {{/if}}
+
+    <div class="invoice-total">
+        <div class="summary-row"><span>Thanh toán</span><b>{{payLabel order.paymentMethod}}</b></div>
+        <div class="summary-row"><span>Tình trạng</span><b><span class="badge {{payStatusClass order.paymentStatus}}">{{payStatusLabel order.paymentStatus}}</span></b></div>
+        <div class="summary-row"><span>Tổng tiền</span><b>{{formatPrice order.totalAmount}}</b></div>
+        {{#if order.paidAt}}
+            {{#if order.pointsUsed}}
+            <div class="summary-row"><span>Giảm giá (dùng {{order.pointsUsed}} điểm)</span><b>-{{formatPrice order.discountAmount}}</b></div>
+            {{/if}}
+            <div class="summary-row"><span>Đã thanh toán</span><b>{{formatPrice order.amountPaid}}</b></div>
+            <div class="summary-row"><span>Thời điểm thu tiền</span><b>{{dateTimeFormat order.paidAt}}</b></div>
+            {{#if order.paymentNote}}
+            <div class="summary-row"><span>Ghi chú thanh toán</span><b>{{order.paymentNote}}</b></div>
+            {{/if}}
+            {{#if order.pointsEarned}}
+            <div class="summary-row"><span>Điểm tích lũy được cộng</span><b>+{{order.pointsEarned}} điểm</b></div>
+            {{/if}}
+        {{/if}}
+        {{#if order.refundedAt}}
+        <div class="summary-row"><span>Đã hoàn tiền ({{dateTimeFormat order.refundedAt}})</span><b>{{formatPrice order.refundAmount}}</b></div>
+        {{/if}}
+    </div>
+
+    {{#if transferQr}}
+    <style>
+        /* Đặt ngay trong trang để luôn áp dụng, không phụ thuộc CSS cũ còn nằm trong bộ nhớ đệm trình duyệt */
+        .transfer-qr { display: flex; align-items: flex-start; gap: 1.25rem; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid #e3e8ef; break-inside: avoid; page-break-inside: avoid; }
+        .transfer-qr-img { flex: 0 0 200px; width: 200px; max-width: 200px; }
+        .transfer-qr-img svg { display: block; width: 200px !important; height: auto !important; max-width: 100%; }
+        .transfer-qr-info { flex: 1 1 0; min-width: 0; }
+        @media (max-width: 520px) {
+            .transfer-qr { flex-direction: column; align-items: center; }
+            .transfer-qr-info { width: 100%; }
+        }
+        @media print {
+            .transfer-qr { flex-direction: row; align-items: flex-start; }
+            .transfer-qr-img { flex-basis: 170px; width: 170px; max-width: 170px; }
+            .transfer-qr-img svg { width: 170px !important; }
+        }
+    </style>
+    <section class="transfer-qr">
+        <div class="transfer-qr-img">{{{transferQr.svg}}}</div>
+        <div class="transfer-qr-info">
+            <h3 style="margin-top:0;">Thanh toán chuyển khoản</h3>
+            <p class="muted">Mở app ngân hàng, quét mã QR: số tiền và nội dung được điền sẵn.</p>
+            <ul style="list-style:none; padding:0; margin:0; line-height:1.7;">
+                <li>Ngân hàng: <b>{{transferQr.bankName}}</b></li>
+                <li>Số tài khoản: <b class="mono">{{transferQr.account}}</b></li>
+                {{#if transferQr.accountName}}<li>Chủ tài khoản: <b>{{transferQr.accountName}}</b></li>{{/if}}
+                <li>Số tiền: <b>{{formatPrice transferQr.amount}}</b></li>
+                <li>Nội dung: <b class="mono">{{transferQr.content}}</b></li>
+            </ul>
+            <p class="muted no-print" style="margin-bottom:0;">Số tiền là tổng đơn (chưa trừ điểm). Nếu dùng điểm, hãy chuyển phần còn lại sau khi trừ.</p>
+        </div>
+    </section>
+    {{else if bankMissing}}
+    <p class="muted no-print" style="margin-top:1rem;">Chưa cấu hình tài khoản ngân hàng nên chưa hiện mã QR chuyển khoản. Đặt <code>BANK_BIN</code> và <code>BANK_ACCOUNT</code> trong file <code>.env</code>.</p>
+    {{/if}}
+
+    {{#if customerWaitsAtCounter}}
+    <p class="muted no-print" style="margin-top:1rem;">Đơn này chưa thanh toán. Bạn có thể thanh toán trực tiếp tại quầy khi nhận đồ{{#if transferQr}} hoặc quét mã QR ở trên{{/if}}.</p>
+    {{/if}}
+
+    {{#if pay}}
+    <section class="no-print" id="thu-tien" style="margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--border, #e3e8ef);">
+        <h3>Thu tiền đơn hàng</h3>
+        <p class="muted">
+            Điểm của khách: <b>{{formatNumber pay.points}}</b> điểm (1 điểm = {{formatPrice pay.pointValue}}).
+            {{#if pay.card}}Thẻ trả trước {{pay.card.code}}: số dư <b>{{formatPrice pay.card.balance}}</b>{{#unless pay.cardUsable}} (đang bị khóa){{/unless}}.
+            {{else}}Khách chưa đăng ký thẻ trả trước.{{/if}}
+        </p>
+
+        <form action="/orders/{{order._id}}/pay" method="POST" class="inline-form">
+            {{> csrf}}
+            <div class="field-group">
+                <label class="field-label" for="paymentMethod">Hình thức thu tiền</label>
+                <select class="field-select" id="paymentMethod" name="paymentMethod">
+                    {{#each pay.methods}}
+                    <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+                    {{/each}}
+                </select>
+                <span class="field-hint">Chọn "Thẻ trả trước" để trừ trực tiếp vào số dư thẻ của khách.</span>
+            </div>
+
+            {{#if pay.maxPoints}}
+            <div class="field-group">
+                <label class="field-label" for="pointsToUse">Dùng điểm (tối đa {{pay.maxPoints}})</label>
+                <input class="field-input" id="pointsToUse" type="number" name="pointsToUse" min="0" max="{{pay.maxPoints}}" step="1" value="0">
+            </div>
+            {{/if}}
+
+            <div class="field-group">
+                <label class="field-label" for="paymentNote">Ghi chú thu tiền (tùy chọn)</label>
+                <input class="field-input" id="paymentNote" type="text" name="paymentNote" maxlength="100" placeholder="VD: mã giao dịch chuyển khoản">
+            </div>
+
+            <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận thu tiền cho đơn {{order.code}}?')">Xác nhận thu tiền</button>
+        </form>
+    </section>
+    {{/if}}
+
+    <div class="invoice-actions no-print">
+        <button type="button" class="btn btn-primary" onclick="window.print()">{{> icon name="printer"}} In hóa đơn</button>
+        {{#if isStaff}}
+            {{#if canEdit}}<a href="/orders/{{order._id}}/edit" class="btn btn-secondary">Sửa đơn</a>{{/if}}
+            {{#unless cancelled}}<a href="/orders/label/{{order._id}}" class="btn btn-secondary" target="_blank" rel="noopener">{{> icon name="tag"}} In tem dán túi</a>{{/unless}}
+            <a href="/admin/orders" class="btn btn-secondary">Danh sách đơn hàng</a>
+            <a href="/orders/create" class="btn btn-secondary">Tạo đơn mới</a>
+        {{else}}
+            <a href="/me/history" class="btn btn-secondary">Lịch sử giặt</a>
+        {{/if}}
+    </div>
+
+    {{#if editBlockReason}}
+    {{#unless cancelled}}<p class="muted no-print" style="margin-top:.75rem;">{{editBlockReason}}</p>{{/unless}}
+    {{/if}}
+
+    {{#if canCancel}}
+    <section class="no-print cancel-box">
+        {{#if cancelNeedsOwner}}
+        <p class="muted">Đơn này đã thu tiền. Chỉ chủ tiệm mới được hủy và hoàn tiền; hãy nhờ chủ tiệm xử lý.</p>
+        {{else}}
+        <details>
+            <summary>Hủy đơn này</summary>
+            <form action="/orders/{{order._id}}/cancel" method="POST" class="inline-form" style="margin-top:.75rem;">
+                {{> csrf}}
+                <div class="field-group">
+                    <label class="field-label" for="cancelReason">Lý do hủy (bắt buộc)</label>
+                    <input class="field-input" id="cancelReason" type="text" name="reason" minlength="3" maxlength="200" required placeholder="VD: khách đổi ý, lập nhầm đơn">
+                    {{#eq order.paymentStatus "paid"}}
+                    <span class="field-hint">Đơn đã thu tiền: hệ thống sẽ tự hoàn thẻ trả trước và trả/thu hồi điểm. Tiền mặt / chuyển khoản phải hoàn trực tiếp cho khách.</span>
+                    {{/eq}}
+                </div>
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Hủy đơn {{order.code}}? Thao tác này không hoàn tác được.')">Xác nhận hủy đơn</button>
+            </form>
+        </details>
+        {{/if}}
+    </section>
+    {{/if}}
+
+    {{#if showAudit}}
+    <section class="no-print audit-box">
+        <h3>Nhật ký đơn</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Thời gian</th><th>Người thực hiện</th><th>Thao tác</th><th>Chi tiết</th></tr></thead>
+                <tbody>
+                    {{#each audit}}
+                    <tr>
+                        <td class="nowrap">{{dateTimeFormat this.at}}</td>
+                        <td>{{#if this.byName}}{{this.byName}}{{else}}—{{/if}}</td>
+                        <td class="nowrap"><b>{{auditLabel this.action}}</b></td>
+                        <td>{{this.detail}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {{/if}}
+</div>

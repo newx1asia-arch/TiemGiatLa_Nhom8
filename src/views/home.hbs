@@ -1,0 +1,77 @@
+{{!-- Trang chủ --}}
+<section class="hero">
+    <div>
+        <span class="hero-tag">Hệ thống quản lý tiệm giặt là</span>
+
+        {{#if currentCustomer}}
+            <p class="hero-hello">Xin chào, <b>{{currentCustomer.name}}</b></p>
+        {{/if}}
+
+        <h1>Quản lý đơn giặt từ tiếp nhận đến trả đồ</h1>
+        <p class="lead">Tạo đơn nhanh, theo dõi trạng thái xử lý, tích điểm thành viên và kiểm soát vật tư của tiệm trên cùng một hệ thống.</p>
+
+        <div class="hero-actions">
+            {{#if currentCustomer}}
+                {{#if isStaff}}
+                    <a href="/orders/create" class="btn btn-primary btn-lg">Tạo đơn hàng</a>
+                    <a href="/admin" class="btn btn-secondary btn-lg">Vào khu vực quản trị</a>
+                {{else}}
+                    <a href="/me/history" class="btn btn-secondary btn-lg">Lịch sử giặt</a>
+                {{/if}}
+            {{else}}
+                <a href="/auth/register" class="btn btn-primary btn-lg">Đăng ký tài khoản</a>
+                <a href="/auth/login" class="btn btn-secondary btn-lg">Đăng nhập</a>
+            {{/if}}
+        </div>
+    </div>
+
+    <div class="card flush price-card" id="bang-gia">
+        <div class="card-head"><h2>Bảng giá dịch vụ</h2></div>
+        <table>
+            <tbody>
+                {{#each services}}
+                <tr><td>{{#if @root.isStaff}}<a href="/orders/create?service={{key}}">{{name}}</a>{{else}}{{name}}{{/if}}</td><td>{{formatPrice price}} / {{unit}}</td></tr>
+                {{/each}}
+            </tbody>
+        </table>
+        <div class="note">{{#if isStaff}}Chọn một dịch vụ để mở sẵn trong form tạo đơn.{{else}}Mang đồ đến tiệm để nhân viên lập đơn và báo giá chính xác.{{/if}}</div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-head">
+        <div class="eyebrow">Quy trình</div>
+        <h2>Từ lúc nhận đồ đến lúc trả đồ</h2>
+    </div>
+    <div class="steps">
+        <div class="step"><h3>Tiếp nhận</h3><p>Nhận đồ từ khách, ghi nhận thông tin khách hàng và chọn dịch vụ.</p></div>
+        <div class="step"><h3>Lập hóa đơn</h3><p>Tính tiền tự động, hẹn ngày trả và in hóa đơn kèm mã đơn.</p></div>
+        <div class="step"><h3>Thực hiện</h3><p>Theo dõi trạng thái: Chờ giặt, Đang giặt, Đã xong.</p></div>
+        <div class="step"><h3>Trả đồ</h3><p>Bàn giao đồ cho khách, cập nhật trạng thái Đã giao.</p></div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-head">
+        <div class="eyebrow">Chức năng</div>
+        <h2>Các nghiệp vụ chính</h2>
+    </div>
+    <div class="feature-grid">
+        <a href="{{#if isStaff}}/orders/create{{else}}/#bang-gia{{/if}}" class="feature">{{> icon name="orders"}}<h3>Đơn hàng &amp; dịch vụ</h3><p>Tạo đơn, chọn dịch vụ, hẹn ngày trả, in hóa đơn.</p></a>
+        <a href="/me/history" class="feature">{{> icon name="clock"}}<h3>Lịch sử giặt</h3><p>Tra cứu toàn bộ đơn đã gửi và trạng thái xử lý.</p></a>
+        <a href="/me/profile" class="feature">{{> icon name="user"}}<h3>Khách hàng &amp; điểm</h3><p>Hồ sơ, hạng thành viên và điểm tích lũy.</p></a>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-head">
+        <div class="eyebrow">Tư vấn</div>
+        <h2>Mẹo giặt giũ hữu ích</h2>
+    </div>
+    <div class="tip-list">
+        <a href="/tips/to-tam"><span><span class="cat">Đồ lụa</span>Hướng dẫn cách giặt và bảo quản trang phục bằng tơ tằm</span>{{> icon name="arrow"}}</a>
+        <a href="/tips/thuoc-tay"><span><span class="cat">Mẹo giặt</span>Cách sử dụng thuốc tẩy cho quần áo vừa an toàn, vừa hiệu quả</span>{{> icon name="arrow"}}</a>
+        <a href="/tips/do-da-moc"><span><span class="cat">Đồ da</span>Mẹo phục hồi đồ da bị mốc đơn giản</span>{{> icon name="arrow"}}</a>
+        <a href="/tips/ao-trang"><span><span class="cat">Tẩy vết bẩn</span>Tip đánh bay các vết bẩn trên áo trắng đơn giản tại nhà</span>{{> icon name="arrow"}}</a>
+    </div>
+</section>

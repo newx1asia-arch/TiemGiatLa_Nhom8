@@ -1,0 +1,83 @@
+<div class="page-head">
+    <div>
+        <h1>Thẻ trả trước</h1>
+        <p>Nạp tiền vào thẻ để thanh toán nhanh cho các đơn giặt.</p>
+    </div>
+</div>
+
+{{#if error}}<div class="field-error">{{error}}</div>{{/if}}
+{{#if success}}<div class="field-success">{{success}}</div>{{/if}}
+
+{{#if card}}
+<div class="profile-grid">
+    <div class="card">
+        <h3>Thông tin thẻ</h3>
+        <div class="kv"><span class="label">Mã thẻ</span><span class="customer-code">{{card.code}}</span></div>
+        <div class="kv"><span class="label">Số dư</span><b>{{formatPrice card.balance}}</b></div>
+        <div class="kv"><span class="label">Trạng thái</span><span class="status-badge {{statusClass card.status}}">{{cardStatusLabel card.status}}</span></div>
+    </div>
+
+    <div class="card">
+        <h3>Nạp tiền vào thẻ</h3>
+        {{#if demoTopup}}
+        <form method="POST" action="/me/card/topup">
+{{> csrf}}
+            <div class="field-group">
+                <label class="field-label" for="amount">Số tiền (đ)</label>
+                <input class="field-input" id="amount" type="number" name="amount" min="1000" step="1000" placeholder="VD: 100000">
+                <span class="field-hint">Chế độ thử nghiệm (demo): khách tự nạp. Môi trường thật sẽ tắt chức năng này.</span>
+            </div>
+            <button type="submit" class="btn btn-primary" {{#eq card.status "locked"}}disabled{{/eq}}>Nạp tiền</button>
+        </form>
+        {{else}}
+        <p class="muted">Để nạp tiền, vui lòng mang tiền đến quầy của tiệm. Nhân viên sẽ nạp vào thẻ cho bạn, số dư cập nhật ngay tại đây.</p>
+        {{/if}}
+    </div>
+</div>
+
+<div class="card flush mt-1">
+    <div class="card-head"><h3>Lịch sử giao dịch</h3></div>
+    {{#if transactions.length}}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Thời gian</th>
+                    <th>Loại</th>
+                    <th class="num">Số tiền</th>
+                    <th class="num">Số dư sau GD</th>
+                    <th>Ghi chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each transactions}}
+                <tr>
+                    <td>{{dateTimeFormat this.createdAt}}</td>
+                    <td>{{#eq this.type "nap"}}Nạp tiền{{else}}Thanh toán đơn{{/eq}}</td>
+                    <td class="num">{{formatPrice this.amount}}</td>
+                    <td class="num">{{formatPrice this.balanceAfter}}</td>
+                    <td>{{#if this.note}}{{this.note}}{{else}}—{{/if}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    {{else}}
+    <div class="empty-state">Chưa có giao dịch nào.</div>
+    {{/if}}
+</div>
+
+{{else}}
+<div class="card auth-card left">
+    <div class="empty-state">
+        Bạn chưa có thẻ trả trước.
+        <small>Đăng ký để lưu số dư và thanh toán nhanh cho các đơn giặt sau này.</small>
+    </div>
+    <form method="POST" action="/me/card/register">
+{{> csrf}}
+        <button type="submit" class="btn btn-primary btn-block">Đăng ký thẻ trả trước</button>
+    </form>
+</div>
+{{/if}}
+
+<a href="/me/profile" class="back-link">&larr; Quay lại hồ sơ</a>

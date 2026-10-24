@@ -1,0 +1,508 @@
+<div class="page-head">
+    <div>
+        <h1>{{#if editOrder}}Sửa đơn {{editOrder.code}}{{else}}Tạo đơn hàng{{/if}}</h1>
+        <p>{{#if editOrder}}Chỉ sửa được khi đơn chưa thu tiền và chưa giao. Mọi thay đổi được ghi vào nhật ký đơn.{{else}}Cân túi đồ để tính theo ký (từ 1 kg), hoặc đếm từng loại đồ để tính theo món. Tổng tiền được tính tự động theo bảng giá của tiệm.{{/if}}</p>
+    </div>
+</div>
+
+{{#if error}}<div class="field-error">{{error}}</div>{{/if}}
+
+<form action="{{formAction}}" method="POST" id="orderForm">
+{{> csrf}}
+  <div class="order-layout">
+
+    <div class="card">
+
+      <div class="form-section">
+        <div class="form-section-title"><span class="n">1</span> Khách hàng</div>
+        {{#if editOrder}}
+        <p><b>{{editOrder.customer.name}}</b> <span class="muted">· {{editOrder.customer.code}} · {{editOrder.customer.phone}}</span></p>
+        <span class="field-hint">Không đổi được khách của đơn đã lập. Nếu chọn nhầm khách, hãy hủy đơn rồi lập đơn mới.</span>
+        {{else}}
+        <div class="choice-grid two" id="custMode">
+          <label class="choice">
+            <input type="radio" name="customerMode" value="existing" {{#unless newMode}}checked{{/unless}}>
+            <span class="choice-box"><b>Khách đã có hồ sơ</b><small>Nhập mã KH hoặc số điện thoại</small></span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="customerMode" value="new" {{#if newMode}}checked{{/if}}>
+            <span class="choice-box"><b>Khách mới (vãng lai)</b><small>Chỉ cần tên và số điện thoại</small></span>
+          </label>
+        </div>
+
+        <div id="custExisting" class="field-group flush" style="margin-top:.85rem;">
+          <label class="field-label" for="customerId">Mã khách hàng hoặc số điện thoại</label>
+          <input class="field-input" type="text" name="customerId" id="customerId" value="{{old.customerId}}"
+                 placeholder="VD: KH000001 hoặc 0912345678" maxlength="40">
+        </div>
+
+        <div id="custNew" style="margin-top:.85rem;">
+          <div class="field-row">
+            <div class="field-group flush">
+              <label class="field-label" for="newName">Họ tên khách</label>
+              <input class="field-input" type="text" name="newName" id="newName" value="{{old.newName}}" maxlength="255" placeholder="VD: Nguyễn Văn A">
+            </div>
+            <div class="field-group flush">
+              <label class="field-label" for="newPhone">Số điện thoại</label>
+              <input class="field-input" type="tel" name="newPhone" id="newPhone" value="{{old.newPhone}}" maxlength="10" placeholder="VD: 0912345678">
+            </div>
+          </div>
+          <span class="field-hint">Hệ thống tạo hồ sơ khách (mã KH) khi lưu đơn. Khách chưa có tài khoản đăng nhập, nhân viên có thể cấp sau ở mục Khách hàng.</span>
+        </div>
+        {{/if}}
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title"><span class="n">2</span> Đồ giặt</div>
+        {{#if noServices}}<div class="field-error">Chưa có dịch vụ nào đang bán. Chủ tiệm cần thêm dịch vụ ở mục Bảng giá.</div>{{/if}}
+
+        {{#if weight}}
+        <div class="wt-box" id="weightBox">
+          <label class="field-label" for="weightKg">Cân cả túi đồ (kg)</label>
+          <div class="qty wt-qty">
+            <button type="button" id="wMinus" aria-label="Giảm số ký">−</button>
+            <input class="field-input" type="number" step="0.1" min="0" max="{{weight.max}}" name="weightKg" id="weightKg"
+                   value="{{weight.value}}" placeholder="0" inputmode="decimal"
+                   data-price="{{weight.price}}" data-min="{{weight.minKg}}" data-name="{{weight.name}}">
+            <button type="button" id="wPlus" aria-label="Tăng số ký">+</button>
+            <span class="svc-unit">kg</span>
+          </div>
+          <div class="wt-rule">
+            Từ <b>{{weight.minKg}} kg</b> trở lên: tính <b>{{formatPrice weight.price}}/kg</b> (lẻ 0,1 kg).
+            Dưới {{weight.minKg}} kg: không tính tiền ký, tính tiền từng món ở bên dưới.
+          </div>
+          <div class="wt-mode" id="weightMode" role="status"></div>
+        </div>
+        {{/if}}
+
+        {{#if garments}}
+        <div class="form-section-sub">Ghi nhận từng món khách gửi <small>(mỗi món một thẻ, có mã tem riêng khi lưu đơn)</small></div>
+        <div class="piece-form" id="pieceForm">
+          <div class="pf-step">① Loại đồ</div>
+          <div class="tile-grid">
+            {{#each garments}}
+            <button type="button" class="tile" data-key="{{key}}" data-name="{{name}}"><b>{{name}}</b><small>{{formatPrice price}}{{#if byWeight}} · gộp giá ký{{else}} · tính riêng{{/if}}</small><span class="tile-count"></span></button>
+            {{/each}}
+          </div>
+
+          <div class="pf-fields" id="pfFields" hidden>
+            <div class="pf-step">② Đặc điểm của <b id="pfType"></b></div>
+            <div class="pf-label">Màu</div>
+            <div class="chip-row" id="pfColor">
+              {{#each colors}}<button type="button" class="chip color-chip" data-v="{{label}}"><i style="background:{{hex}}"></i>{{label}}</button>{{/each}}
+            </div>
+            <div class="field-row">
+              <div class="field-group flush">
+                <label class="field-label" for="pfMaterial">Chất liệu</label>
+                <select class="field-select" id="pfMaterial"><option value="">— không rõ —</option>{{#each materials}}<option>{{this}}</option>{{/each}}</select>
+              </div>
+              <div class="field-group flush">
+                <label class="field-label" for="pfBrand">Hãng / nhãn hiệu</label>
+                <input class="field-input" type="text" id="pfBrand" maxlength="40" placeholder="VD: Levi's, Nike, không nhãn">
+              </div>
+            </div>
+            <div class="pf-label">Tình trạng lúc nhận <small>(chọn nhiều)</small></div>
+            <div class="chip-row" id="pfCond">
+              {{#each conditions}}<button type="button" class="chip warn-chip" data-v="{{this}}">{{this}}</button>{{/each}}
+            </div>
+            <div class="pf-label">Cách xử lý</div>
+            <div class="chip-row" id="pfProc">
+              {{#each processes}}<button type="button" class="chip{{#if first}} on{{/if}}" data-v="{{v}}">{{v}}</button>{{/each}}
+            </div>
+            <div class="field-row">
+              <div class="field-group flush">
+                <label class="field-label" for="pfNote">Ghi chú riêng</label>
+                <input class="field-input" type="text" id="pfNote" maxlength="100" placeholder="VD: vết mực ở túi trái, khóa kéo hỏng">
+              </div>
+              <div class="field-group flush" style="max-width:130px;">
+                <label class="field-label" for="pfQty">Số món giống nhau</label>
+                <input class="field-input" type="number" id="pfQty" min="1" max="50" value="1">
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary" id="pfAdd">+ Thêm vào phiếu</button>
+          </div>
+        </div>
+
+        <div class="form-section-sub">Phiếu nhận đồ <small id="pieceCount"></small></div>
+        <div class="piece-list" id="pieceList"></div>
+        <input type="hidden" name="piecesJson" id="piecesJson" value="">
+        <script type="application/json" id="initPieces">{{{piecesInit}}}</script>
+
+        <div hidden>
+          {{#each garments}}
+          <div class="gm-row" data-key="{{key}}" data-price="{{price}}" data-bw="{{#if byWeight}}1{{else}}0{{/if}}" data-name="{{name}}" data-unit="{{unit}}">
+            <input type="number" name="gqty_{{key}}" value="" tabindex="-1">
+            <b class="svc-sub"></b>
+          </div>
+          {{/each}}
+        </div>
+        {{/if}}
+
+        {{#if services}}
+        <div class="form-section-sub">Dịch vụ khác <small>(bấm để thêm vào phiếu)</small></div>
+        <div class="tile-grid">
+          {{#each services}}<button type="button" class="tile tile-svc" data-svc="{{key}}"><b>{{name}}</b><small>{{formatPrice price}} / {{unit}}</small></button>{{/each}}
+        </div>
+        <div class="svc-list">
+          {{#each services}}
+          <div class="svc-row {{#if checked}}on{{/if}}" {{#unless checked}}hidden{{/unless}}>
+            <label class="svc-pick">
+              <input type="checkbox" name="serviceKey" value="{{key}}" data-name="{{name}}" data-price="{{price}}" data-step="{{step}}" data-unit="{{unit}}" {{#if checked}}checked{{/if}}>
+              <span class="svc-name"><b>{{name}}</b><small>{{formatPrice price}} / {{unit}}</small></span>
+            </label>
+            <div class="qty svc-qty">
+              <button type="button" class="qminus" aria-label="Giảm số lượng {{name}}">−</button>
+              <input class="field-input" type="number" step="{{step}}" min="{{step}}" max="200" name="qty_{{key}}" value="{{qty}}" aria-label="Số lượng {{name}} ({{unit}})" {{#unless checked}}disabled{{/unless}}>
+              <button type="button" class="qplus" aria-label="Tăng số lượng {{name}}">+</button>
+            </div>
+            <span class="svc-unit">{{unit}}</span>
+            <b class="svc-sub"></b>
+          </div>
+          {{/each}}
+        </div>
+        {{/if}}
+      </div>
+
+      <div class="form-grid-2">
+      <div class="form-section">
+        <div class="form-section-title"><span class="n">3</span> Ngày hẹn trả đồ</div>
+        <div class="chip-row" id="quickDates">
+          <button type="button" class="chip" data-add="0">Hôm nay</button>
+          <button type="button" class="chip" data-add="1">Ngày mai</button>
+          <button type="button" class="chip" data-add="2">+2 ngày</button>
+          <button type="button" class="chip" data-add="3">+3 ngày</button>
+        </div>
+        <input class="field-input" type="date" name="returnDate" id="returnDate" value="{{old.returnDate}}" min="{{minReturnDate}}" required aria-label="Ngày hẹn trả">
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title"><span class="n">4</span> Phương thức thanh toán dự kiến</div>
+        <div class="choice-grid">
+          {{#each paymentOptions}}
+          <label class="choice">
+            <input type="radio" name="paymentMethod" value="{{value}}" data-text="{{label}}" {{#if checked}}checked{{/if}}>
+            <span class="choice-box"><b>{{label}}</b></span>
+          </label>
+          {{/each}}
+        </div>
+        <span class="field-hint">Tiền chỉ được ghi nhận sau khi thu tiền ở trang hóa đơn.</span>
+      </div>
+
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title"><span class="n">5</span> Ghi chú chung của đơn</div>
+        <textarea class="field-textarea" name="note" id="note" rows="2" maxlength="500" placeholder="VD: áo trắng có vết bẩn cũ ở cổ, quần rách nhẹ ở gấu, đồ hiệu...">{{old.note}}</textarea>
+        <span class="field-hint">Ghi chú riêng từng món đã nhập ở phiếu nhận đồ; đây chỉ là ghi chú chung (tối đa 500 ký tự).</span>
+      </div>
+
+    </div>
+
+    <aside class="card summary">
+      <h3>Tóm tắt đơn hàng</h3>
+      <div id="sLines" class="summary-lines"></div>
+      <div class="summary-row"><span>Ngày trả đồ</span><b id="sDate">Chưa chọn</b></div>
+      <div class="summary-row"><span>Thanh toán</span><b id="sPay"></b></div>
+
+      <div class="summary-total">
+        <span>Tạm tính</span>
+        <strong id="sTotal"></strong>
+      </div>
+
+      <button type="submit" id="submitBtn" class="btn btn-primary btn-lg btn-block">{{#if editOrder}}Lưu thay đổi{{else}}Tạo đơn và lập hóa đơn{{/if}}</button>
+      {{#if editOrder}}<a href="/orders/invoice/{{editOrder._id}}" class="btn btn-secondary btn-block" style="margin-top:.5rem;">Hủy thay đổi</a>{{/if}}
+      <p class="note">Số tiền cuối cùng do hệ thống tính lại theo bảng giá khi lưu đơn.</p>
+    </aside>
+
+  </div>
+</form>
+
+<script>
+(function () {
+  var date = document.getElementById('returnDate');
+  var chips = document.querySelectorAll('#quickDates .chip');
+  var rows = Array.prototype.slice.call(document.querySelectorAll('.svc-row'));
+  var gRows = Array.prototype.slice.call(document.querySelectorAll('.gm-row'));
+  var wInput = document.getElementById('weightKg');
+  var wMode = document.getElementById('weightMode');
+  var submitBtn = document.getElementById('submitBtn');
+  var minKg = wInput ? (parseFloat(wInput.getAttribute('data-min')) || 1) : 1;
+  var kgPrice = wInput ? (parseFloat(wInput.getAttribute('data-price')) || 0) : 0;
+
+  function money(n) { return (Math.round(n) || 0).toLocaleString('vi-VN') + ' đ'; }
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function fmtISO(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function num(v) { return parseFloat(String(v).replace(',', '.')) || 0; }
+  function parts(row) {
+    var box = row.querySelector('input[type="checkbox"]');
+    return { box: box, qty: row.querySelector('input[type="number"]') };
+  }
+  function addLine(container, label, amount) {
+    var line = document.createElement('div');
+    line.className = 'summary-row';
+    var name = document.createElement('span');
+    name.textContent = label;
+    var val = document.createElement('b');
+    val.textContent = amount;
+    line.appendChild(name); line.appendChild(val);
+    container.appendChild(line);
+  }
+
+  // Giá hiển thị ở đây CHỈ để tham khảo; server luôn tự tính lại theo cùng quy tắc.
+  function update() {
+    var lines = document.getElementById('sLines');
+    var pay = document.querySelector('input[name="paymentMethod"]:checked');
+    var total = 0, count = 0;
+    while (lines.firstChild) lines.removeChild(lines.firstChild);
+
+    // 1. Giặt theo ký: từ minKg trở lên mới tính theo ký
+    var kg = wInput ? Math.round(num(wInput.value) * 10) / 10 : 0;
+    var useWeight = !!wInput && kg >= minKg;
+    if (wMode) {
+      wMode.className = 'wt-mode' + (useWeight ? ' on' : '');
+      if (!kg) wMode.textContent = 'Chưa cân. Nhập số ký, hoặc chỉ nhập món đồ bên dưới.';
+      else if (!useWeight) wMode.textContent = 'Dưới ' + minKg + ' kg: không tính tiền ký, tính theo từng món bên dưới.';
+      else wMode.textContent = 'Tính theo ký: ' + kg + ' kg × ' + money(kgPrice) + ' = ' + money(kgPrice * kg) + '. Món "gộp vào giá ký" không tính thêm.';
+    }
+    if (useWeight) {
+      count++;
+      total += Math.round(kgPrice * kg);
+      addLine(lines, wInput.getAttribute('data-name') + ' × ' + kg + ' kg', money(kgPrice * kg));
+    }
+
+    // 2. Món đồ phân loại
+    gRows.forEach(function (row) {
+      var qtyInput = row.querySelector('input[type="number"]');
+      var sub = row.querySelector('.svc-sub');
+      var price = parseFloat(row.getAttribute('data-price')) || 0;
+      var q = Math.floor(num(qtyInput.value));
+      var included = useWeight && row.getAttribute('data-bw') === '1';
+      row.classList.toggle('on', q > 0);
+      row.hidden = q <= 0;
+      var tc = document.querySelector('.tile[data-key="' + row.getAttribute('data-key') + '"] .tile-count');
+      if (tc) tc.textContent = q > 0 ? q : '';
+      if (q <= 0) { sub.textContent = ''; return; }
+      count++;
+      if (included) {
+        sub.textContent = 'đã gồm trong giá ký';
+        addLine(lines, row.getAttribute('data-name') + ' × ' + q + ' (gồm trong giá ký)', '0 đ');
+      } else {
+        total += Math.round(price * q);
+        sub.textContent = money(price * q);
+        addLine(lines, row.getAttribute('data-name') + ' × ' + q, money(price * q));
+      }
+    });
+
+    // 3. Dịch vụ khác
+    rows.forEach(function (row) {
+      var p = parts(row);
+      var sub = row.querySelector('.svc-sub');
+      var price = parseFloat(p.box.getAttribute('data-price')) || 0;
+      var q = parseFloat(p.qty.value) || 0;
+      row.classList.toggle('on', p.box.checked);
+      row.hidden = !p.box.checked;
+      var st = document.querySelector('.tile[data-svc="' + p.box.value + '"]');
+      if (st) st.classList.toggle('picked', p.box.checked);
+      p.qty.disabled = !p.box.checked;
+      if (!p.box.checked) { sub.textContent = ''; return; }
+      count++;
+      total += price * q;
+      sub.textContent = money(price * q);
+      addLine(lines, p.box.getAttribute('data-name') + ' × ' + q + ' ' + p.box.getAttribute('data-unit'), money(price * q));
+    });
+
+    var te = document.getElementById('ticketEmpty');
+    if (te) te.hidden = gRows.some(function (r) { return !r.hidden; });
+    if (!count) {
+      var empty = document.createElement('div');
+      empty.className = 'summary-row';
+      var msg = document.createElement('span');
+      msg.textContent = 'Chưa có đồ giặt nào';
+      empty.appendChild(msg);
+      lines.appendChild(empty);
+    }
+    submitBtn.disabled = !count;
+
+    document.getElementById('sPay').textContent = pay ? pay.getAttribute('data-text') : '';
+    document.getElementById('sTotal').textContent = money(total);
+
+    if (date.value) {
+      var d = date.value.split('-');
+      document.getElementById('sDate').textContent = d[2] + '/' + d[1] + '/' + d[0];
+    } else {
+      document.getElementById('sDate').textContent = 'Chưa chọn';
+    }
+
+    chips.forEach(function (c) {
+      var dd = new Date(); dd.setDate(dd.getDate() + parseInt(c.getAttribute('data-add'), 10));
+      c.classList.toggle('on', date.value === fmtISO(dd));
+    });
+  }
+
+  // Ô số ký: nút +/- nhảy 0,5 kg
+  if (wInput) {
+    wInput.addEventListener('input', update);
+    document.getElementById('wMinus').addEventListener('click', function () {
+      wInput.value = Math.max(0, Math.round((num(wInput.value) - 0.5) * 10) / 10) || ''; update();
+    });
+    document.getElementById('wPlus').addEventListener('click', function () {
+      wInput.value = Math.round((num(wInput.value) + 0.5) * 10) / 10; update();
+    });
+  }
+
+  document.querySelectorAll('.tile[data-svc]').forEach(function (t) {
+    t.addEventListener('click', function () {
+      var box = document.querySelector('.svc-row input[type="checkbox"][value="' + t.getAttribute('data-svc') + '"]');
+      box.checked = !box.checked; update();
+    });
+  });
+
+  // ---- Thẻ từng món ----
+  // Mỗi món một thẻ; số lượng mỗi loại (ô gqty_ ẩn, dùng để tính tóm tắt) = số thẻ cùng loại. Server tự đếm lại từ piecesJson.
+  var pieces = [];
+  try { pieces = JSON.parse(document.getElementById('initPieces').textContent) || []; } catch (e) { pieces = []; }
+  var curType = null, curColor = '', curProc = 'Giặt sấy', curConds = [];
+  var pfFields = document.getElementById('pfFields');
+  var listEl = document.getElementById('pieceList');
+  var typeNames = {};
+  document.querySelectorAll('.tile[data-key]').forEach(function (t) { typeNames[t.getAttribute('data-key')] = t.getAttribute('data-name'); });
+
+  function sync() {
+    var counts = {};
+    pieces.forEach(function (p) { counts[p.type] = (counts[p.type] || 0) + 1; });
+    gRows.forEach(function (row) {
+      var c = counts[row.getAttribute('data-key')] || 0;
+      row.querySelector('input[type="number"]').value = c || '';
+    });
+    document.getElementById('piecesJson').value = JSON.stringify(pieces);
+    document.getElementById('pieceCount').textContent = pieces.length ? '(' + pieces.length + ' món)' : '';
+    renderPieces();
+    update();
+  }
+
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+  function renderPieces() {
+    while (listEl.firstChild) listEl.removeChild(listEl.firstChild);
+    if (!pieces.length) { listEl.appendChild(el('div', 'ticket-empty', 'Chưa có món nào. Chọn loại đồ ở trên rồi bấm "Thêm vào phiếu".')); return; }
+    pieces.forEach(function (p, i) {
+      var card = el('div', 'piece-card');
+      card.appendChild(el('span', 'piece-no', '#' + (i + 1)));
+      var body = el('div', 'piece-body');
+      var head = el('b', '', typeNames[p.type] || p.type);
+      body.appendChild(head);
+      var meta = [p.color, p.material, p.brand].filter(Boolean).join(' · ');
+      if (meta) body.appendChild(el('div', 'piece-meta', meta));
+      var tags = el('div', 'piece-tags');
+      (p.conditions || []).forEach(function (c) { tags.appendChild(el('span', 'tag tag-warn', c)); });
+      tags.appendChild(el('span', 'tag tag-soft', p.process || 'Giặt sấy'));
+      body.appendChild(tags);
+      if (p.note) body.appendChild(el('div', 'piece-meta', p.note));
+      card.appendChild(body);
+      var del = el('button', 'btn btn-secondary btn-sm', 'Xóa');
+      del.type = 'button';
+      del.addEventListener('click', function () { pieces.splice(i, 1); sync(); });
+      card.appendChild(del);
+      listEl.appendChild(card);
+    });
+  }
+
+  function single(boxId, cb) { // nhóm chip chọn 1
+    document.querySelectorAll('#' + boxId + ' .chip').forEach(function (c) {
+      c.addEventListener('click', function () {
+        var on = c.classList.contains('on');
+        document.querySelectorAll('#' + boxId + ' .chip').forEach(function (x) { x.classList.remove('on'); });
+        if (!on || boxId === 'pfProc') c.classList.add('on');
+        cb(c.classList.contains('on') ? c.getAttribute('data-v') : '');
+      });
+    });
+  }
+  single('pfColor', function (v) { curColor = v; });
+  single('pfProc', function (v) { curProc = v || 'Giặt sấy'; });
+  document.querySelectorAll('#pfCond .chip').forEach(function (c) {
+    c.addEventListener('click', function () {
+      c.classList.toggle('on');
+      curConds = Array.prototype.map.call(document.querySelectorAll('#pfCond .chip.on'), function (x) { return x.getAttribute('data-v'); });
+    });
+  });
+  document.querySelectorAll('.tile[data-key]').forEach(function (t) {
+    t.addEventListener('click', function () {
+      curType = t.getAttribute('data-key');
+      document.querySelectorAll('.tile[data-key]').forEach(function (x) { x.classList.toggle('picked', x === t); });
+      document.getElementById('pfType').textContent = t.getAttribute('data-name');
+      pfFields.hidden = false;
+    });
+  });
+  var addBtn = document.getElementById('pfAdd');
+  if (addBtn) addBtn.addEventListener('click', function () {
+    if (!curType) return;
+    var n = Math.min(50, Math.max(1, Math.floor(num(document.getElementById('pfQty').value)) || 1));
+    for (var k = 0; k < n; k++) {
+      pieces.push({
+        type: curType, color: curColor, material: document.getElementById('pfMaterial').value,
+        brand: document.getElementById('pfBrand').value.trim(), conditions: curConds.slice(), process: curProc,
+        note: document.getElementById('pfNote').value.trim()
+      });
+    }
+    // Giữ màu / chất liệu / cách xử lý cho món kế tiếp (thường cùng một túi), xóa phần riêng của từng món
+    document.getElementById('pfNote').value = '';
+    document.getElementById('pfQty').value = 1;
+    document.querySelectorAll('#pfCond .chip').forEach(function (x) { x.classList.remove('on'); });
+    curConds = [];
+    sync();
+  });
+  if (document.getElementById('pieceList')) sync();
+
+  rows.forEach(function (row) {
+    var p = parts(row);
+    var step = parseFloat(p.box.getAttribute('data-step')) || 1;
+    var delta = step >= 1 ? 1 : 0.5; // kg: nhảy 0,5; món/cái/đôi: nhảy 1
+
+    p.box.addEventListener('change', update);
+    p.qty.addEventListener('input', update);
+    row.querySelector('.qminus').addEventListener('click', function () { bump(-1); });
+    row.querySelector('.qplus').addEventListener('click', function () { bump(1); });
+
+    function bump(sign) {
+      if (!p.box.checked) p.box.checked = true; // bấm +/- thì tự tick dịch vụ đó
+      var v = (parseFloat(p.qty.value) || 0) + sign * delta;
+      p.qty.value = Math.max(step, Math.round(v * 10) / 10);
+      update();
+    }
+  });
+
+  // Chọn nhanh ngày hẹn
+  chips.forEach(function (c) {
+    c.addEventListener('click', function () {
+      var d = new Date(); d.setDate(d.getDate() + parseInt(c.getAttribute('data-add'), 10));
+      date.value = fmtISO(d);
+      update();
+    });
+  });
+
+  date.addEventListener('input', update);
+  document.querySelectorAll('input[name="paymentMethod"]').forEach(function (r) {
+    r.addEventListener('change', update);
+  });
+
+  // Mặc định hẹn trả ngày mai (nếu chưa có giá trị, ví dụ lần đầu mở form)
+  if (!date.value) date.value = fmtISO(new Date(Date.now() + 86400000));
+
+  // Chuyển giữa "khách đã có hồ sơ" và "khách mới"
+  var modeRadios = document.querySelectorAll('input[name="customerMode"]');
+  function syncMode() {
+    var checked = document.querySelector('input[name="customerMode"]:checked');
+    if (!checked) return;
+    var isNew = checked.value === 'new';
+    var ex = document.getElementById('custExisting'), nw = document.getElementById('custNew');
+    ex.style.display = isNew ? 'none' : '';
+    nw.style.display = isNew ? '' : 'none';
+    document.getElementById('customerId').required = !isNew;
+    document.getElementById('newName').required = isNew;
+    document.getElementById('newPhone').required = isNew;
+  }
+  modeRadios.forEach(function (r) { r.addEventListener('change', syncMode); });
+  syncMode();
+
+  update();
+})();
+</script>

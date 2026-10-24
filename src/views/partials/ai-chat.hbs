@@ -1,0 +1,93 @@
+<style>
+    .ai-fab { position: fixed; right: 1.1rem; bottom: 1.1rem; z-index: 60; display: flex; align-items: center; gap: .45rem; padding: .7rem 1.05rem; border: 0; border-radius: 999px; background: #1F6FB2; color: #fff; font: inherit; font-weight: 600; cursor: pointer; box-shadow: 0 6px 20px rgba(15, 40, 80, .28); }
+    .ai-fab:hover { background: #185a93; }
+    .ai-panel { position: fixed; right: 1.1rem; bottom: 4.6rem; z-index: 61; width: 360px; max-width: calc(100vw - 2rem); height: 520px; max-height: calc(100vh - 6rem); display: none; flex-direction: column; background: #fff; color: #1b2430; border: 1px solid #d9e0e8; border-radius: 14px; box-shadow: 0 12px 40px rgba(15, 40, 80, .3); overflow: hidden; }
+    .ai-panel.open { display: flex; }
+    .ai-head { display: flex; align-items: center; justify-content: space-between; padding: .75rem 1rem; background: #1F6FB2; color: #fff; }
+    .ai-head b { font-size: .98rem; }
+    .ai-head small { display: block; opacity: .85; font-size: .74rem; }
+    .ai-close { background: none; border: 0; color: #fff; font-size: 1.4rem; line-height: 1; cursor: pointer; }
+    .ai-log { flex: 1; overflow-y: auto; padding: .85rem; display: flex; flex-direction: column; gap: .55rem; background: #f5f8fb; }
+    .ai-msg { max-width: 86%; padding: .55rem .8rem; border-radius: 12px; font-size: .92rem; line-height: 1.45; white-space: pre-wrap; word-wrap: break-word; }
+    .ai-msg.bot { align-self: flex-start; background: #fff; border: 1px solid #e0e6ed; }
+    .ai-msg.me { align-self: flex-end; background: #1F6FB2; color: #fff; }
+    .ai-msg.err { align-self: flex-start; background: #fdecea; color: #8a1f17; border: 1px solid #f3c6c1; }
+    .ai-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+    .ai-chip { border: 1px solid #1F6FB2; background: #fff; color: #1F6FB2; border-radius: 999px; padding: .28rem .7rem; font: inherit; font-size: .8rem; cursor: pointer; }
+    .ai-chip:hover { background: #e8f1fa; }
+    .ai-form { display: flex; gap: .5rem; padding: .65rem; border-top: 1px solid #e0e6ed; background: #fff; }
+    .ai-form input { flex: 1; min-width: 0; padding: .55rem .7rem; border: 1px solid #c9d3de; border-radius: 8px; font: inherit; }
+    .ai-form button { padding: .55rem .9rem; border: 0; border-radius: 8px; background: #1F6FB2; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+    .ai-form button:disabled { opacity: .55; cursor: default; }
+    .ai-note { padding: 0 .85rem .55rem; font-size: .72rem; color: #6b7785; background: #fff; }
+    @media print { .ai-fab, .ai-panel { display: none !important; } }
+</style>
+
+<button type="button" class="ai-fab no-print" id="aiFab" aria-expanded="false" aria-controls="aiPanel">💬 Tư vấn AI</button>
+<section class="ai-panel no-print" id="aiPanel" role="dialog" aria-label="Trợ lý AI tư vấn" data-csrf="{{csrfToken}}" data-name="{{currentCustomer.name}}">
+    <div class="ai-head">
+        <div><b>Trợ lý Tiệm Giặt Là</b><small>Tư vấn dịch vụ, bảng giá, mẹo giặt</small></div>
+        <button type="button" class="ai-close" id="aiClose" aria-label="Đóng">&times;</button>
+    </div>
+    <div class="ai-log" id="aiLog" aria-live="polite"></div>
+    <form class="ai-form" id="aiForm" autocomplete="off">
+        <input type="text" id="aiInput" maxlength="500" placeholder="Nhập câu hỏi..." aria-label="Câu hỏi của bạn">
+        <button type="submit" id="aiSend">Gửi</button>
+    </form>
+    <div class="ai-note">AI có thể nhầm lẫn. Việc tạo đơn, thanh toán, khiếu nại vui lòng liên hệ nhân viên tại quầy.</div>
+</section>
+
+<script>
+(function () {
+    var panel = document.getElementById('aiPanel'), fab = document.getElementById('aiFab');
+    var log = document.getElementById('aiLog'), form = document.getElementById('aiForm');
+    var input = document.getElementById('aiInput'), send = document.getElementById('aiSend');
+    var history = [], busy = false, started = false;
+
+    function add(cls, text) {
+        var d = document.createElement('div');
+        d.className = 'ai-msg ' + cls;
+        d.textContent = text;           // textContent: không chạy HTML/JS lạ từ câu trả lời
+        log.appendChild(d); log.scrollTop = log.scrollHeight;
+        return d;
+    }
+    function start() {
+        if (started) return; started = true;
+        var name = panel.getAttribute('data-name');
+        add('bot', 'Xin chào' + (name ? ' ' + name : '') + '! Mình là trợ lý của Tiệm Giặt Là. Bạn muốn hỏi về bảng giá, cách giặt đồ hay tình trạng đơn hàng?');
+        var chips = document.createElement('div'); chips.className = 'ai-chips';
+        ['Bảng giá dịch vụ', 'Cách giặt áo lụa', 'Cách tích điểm', 'Đơn của tôi đến đâu rồi?'].forEach(function (q) {
+            var b = document.createElement('button'); b.type = 'button'; b.className = 'ai-chip'; b.textContent = q;
+            b.onclick = function () { chips.remove(); ask(q); };
+            chips.appendChild(b);
+        });
+        log.appendChild(chips);
+    }
+    function toggle(open) {
+        panel.classList.toggle('open', open); fab.setAttribute('aria-expanded', open);
+        if (open) { start(); input.focus(); }
+    }
+    fab.onclick = function () { toggle(!panel.classList.contains('open')); };
+    document.getElementById('aiClose').onclick = function () { toggle(false); };
+
+    function ask(text) {
+        if (busy || !text) return;
+        busy = true; send.disabled = true;
+        add('me', text); history.push({ role: 'user', content: text });
+        var wait = add('bot', 'Đang trả lời...');
+        fetch('/ai/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-csrf-token': panel.getAttribute('data-csrf') },
+            body: JSON.stringify({ messages: history.slice(-10) })
+        }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, j: j }; }); })
+          .then(function (x) {
+              wait.remove();
+              if (x.ok && x.j.reply) { add('bot', x.j.reply); history.push({ role: 'assistant', content: x.j.reply }); }
+              else { history.pop(); add('err', x.j.error || 'Có lỗi xảy ra, vui lòng thử lại.'); }
+          })
+          .catch(function () { wait.remove(); history.pop(); add('err', 'Không kết nối được. Vui lòng kiểm tra mạng và thử lại.'); })
+          .then(function () { busy = false; send.disabled = false; input.focus(); });
+    }
+    form.onsubmit = function (e) { e.preventDefault(); var t = input.value.trim(); if (!t) return; input.value = ''; ask(t); };
+})();
+</script>

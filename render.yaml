@@ -1,0 +1,45 @@
+# CÁCH C (đám mây, không cần tự thuê máy chủ): Render.com + MongoDB Atlas.
+# Đẩy dự án lên GitHub -> Render > New > Blueprint -> chọn repo. Sau đó điền MONGODB_URI trong Dashboard.
+# Dùng gói Starter (trả phí) để KHÔNG bị "ngủ" khi vắng khách. Hướng dẫn đầy đủ: DEPLOY.md > Hướng 3.
+services:
+  - type: web
+    name: tiem-giat-la
+    runtime: node
+    plan: starter
+    region: singapore   # gần Việt Nam; nên đặt cụm Atlas cùng khu vực
+    buildCommand: npm ci --omit=dev
+    startCommand: node src/index.js
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: MONGODB_URI
+        sync: false   # tự dán chuỗi Atlas vào Dashboard, không ghi vào file này
+      - key: PUBLIC_URL
+        sync: false   # VD: https://tiem-giat-la.onrender.com (hoặc tên miền riêng)
+      - key: BANK_BIN
+        sync: false
+      - key: BANK_ACCOUNT
+        sync: false
+      - key: BANK_ACCOUNT_NAME
+        sync: false
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "465"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false   # khóa Google Gemini (có gói miễn phí) cho trợ lý AI tư vấn (để trống = tắt)
+      - key: ANTHROPIC_API_KEY
+        sync: false   # (tuỳ chọn) khóa Claude API, chỉ dùng khi không có GEMINI_API_KEY
+      - key: SHOP_INFO
+        sync: false

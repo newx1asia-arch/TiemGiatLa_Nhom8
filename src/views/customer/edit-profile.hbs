@@ -1,0 +1,30 @@
+<div class="card auth-card">
+    <h1 class="page-title">Chỉnh sửa thông tin</h1>
+
+    {{#if error}}<div class="field-error">{{error}}</div>{{/if}}
+    {{#if success}}<div class="field-success">{{success}}</div>{{/if}}
+
+    <form method="POST" action="/me/profile/edit">
+{{> csrf}}
+        <div class="field-group">
+            <label class="field-label" for="name">Họ tên</label>
+            <input class="field-input" id="name" type="text" name="name" value="{{customer.name}}" required>
+        </div>
+        <div class="field-group">
+            <label class="field-label" for="phone">Số điện thoại</label>
+            <input class="field-input" id="phone" type="tel" value="{{customer.phone}}" disabled>
+            <span class="field-hint">Số điện thoại dùng để đăng nhập nên không thể thay đổi.</span>
+        </div>
+        <div class="field-group">
+            <label class="field-label" for="email">Email</label>
+            <input class="field-input" id="email" type="email" name="email" value="{{customer.email}}">
+        </div>
+        <div class="field-group">
+            <label class="field-label" for="address">Địa chỉ</label>
+            <input class="field-input" id="address" type="text" name="address" value="{{customer.address}}">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Lưu thay đổi</button>
+    </form>
+
+    <p class="form-footer"><a href="/me/profile">&larr; Quay lại hồ sơ</a></p>
+</div>

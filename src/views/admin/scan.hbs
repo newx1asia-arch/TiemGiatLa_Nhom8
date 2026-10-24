@@ -1,0 +1,117 @@
+<div class="scan-wrap">
+    <section class="card">
+        <h3 class="scan-title">Quét mã vạch trên tem hoặc hóa đơn</h3>
+        <p class="muted flush">Đưa súng quét vào mã vạch, kết quả hiện ngay. Cũng có thể gõ tay mã đơn (VD: <span class="mono">DH000123</span> hoặc chỉ <span class="mono">123</span>) rồi nhấn Enter.</p>
+
+        <form method="GET" action="/admin/scan" class="scan-form" id="scan-form" autocomplete="off">
+            <input class="field-input scan-input" id="scan-input" type="text" name="code" value="{{code}}" maxlength="60"
+                   placeholder="Quét hoặc nhập mã đơn..." autofocus inputmode="text" autocapitalize="characters" spellcheck="false">
+            <button type="submit" class="btn btn-primary">{{> icon name="search"}} Tra đơn</button>
+            <button type="button" class="btn btn-secondary" id="cam-btn" hidden>Quét bằng camera</button>
+        </form>
+
+        <div id="cam-box" class="cam-box" hidden>
+            <video id="cam-video" playsinline muted></video>
+            <button type="button" class="btn btn-secondary" id="cam-stop">Tắt camera</button>
+        </div>
+        <p class="muted" id="cam-msg" hidden></p>
+    </section>
+
+    {{#if notice}}<div class="{{#if notice.ok}}field-success{{else}}field-error{{/if}}">{{notice.text}}</div>{{/if}}
+
+    {{#if notFound}}
+    <div class="field-error">Không tìm thấy đơn nào với mã <b class="mono">{{code}}</b>. Kiểm tra lại tem hoặc thử quét lại.</div>
+    {{/if}}
+
+    {{#if found}}
+    <section class="card scan-result">
+        <div class="scan-head">
+            <div>
+                <div class="muted">Mã đơn</div>
+                <div class="invoice-code">{{found.code}}</div>
+            </div>
+            <span class="status-badge {{statusClass found.status}} scan-status">{{statusLabel found.status}}</span>
+        </div>
+
+        <div class="invoice-meta">
+            <div>
+                <h4>Khách hàng</h4>
+                <p><b>{{found.customer.name}}</b></p>
+                <p>{{found.customer.phone}}</p>
+            </div>
+            <div>
+                <h4>Đơn hàng</h4>
+                <p>Hẹn trả: <b>{{dateFormat found.returnDate}}</b></p>
+                <p>Tổng: <b>{{formatPrice found.totalAmount}}</b> · <span class="badge {{payStatusClass found.paymentStatus}}">{{payStatusLabel found.paymentStatus}}</span></p>
+            </div>
+        </div>
+
+        <p><b>Dịch vụ:</b> {{found.serviceSummary}}</p>
+        {{#if found.note}}<p class="invoice-note"><b>Ghi chú đồ:</b> {{found.note}}</p>{{/if}}
+
+        {{#if found.cancelled}}<div class="field-error">Đơn này đã bị hủy – không xử lý.</div>{{/if}}
+        {{#if found.needPayFirst}}<div class="field-error">Khách chưa thanh toán nên chưa thể trả đồ. Thu tiền trước.</div>{{/if}}
+
+        <div class="invoice-actions">
+            {{#if found.canAdvance}}
+            <form action="/admin/orders/{{found._id}}/status" method="POST">
+                {{> csrf}}
+                <input type="hidden" name="backTo" value="{{found.backTo}}">
+                <button type="submit" class="btn btn-primary">Chuyển sang: {{found.nextLabel}}</button>
+            </form>
+            {{/if}}
+            {{#if found.unpaid}}<a href="/orders/invoice/{{found._id}}#thu-tien" class="btn btn-secondary">Thu tiền</a>{{/if}}
+            <a href="/orders/invoice/{{found._id}}" class="btn btn-secondary">Mở hóa đơn</a>
+            {{#unless found.cancelled}}<a href="/orders/label/{{found._id}}" target="_blank" rel="noopener" class="btn btn-secondary">In lại tem</a>{{/unless}}
+        </div>
+    </section>
+    {{/if}}
+</div>
+
+<script>
+(function () {
+    var input = document.getElementById('scan-input');
+    var form = document.getElementById('scan-form');
+    // Luôn đưa con trỏ về ô nhập để quét liên tục không cần chạm chuột
+    function focusInput() { input.focus(); input.select(); }
+    focusInput();
+    document.addEventListener('click', function (e) {
+        var t = e.target;
+        if (!t.closest('a, button, input, select, textarea, form')) focusInput();
+    });
+
+    // Camera (điện thoại/máy tính bảng): chỉ hiện nếu trình duyệt hỗ trợ BarcodeDetector và trang chạy HTTPS (hoặc localhost)
+    var camBtn = document.getElementById('cam-btn');
+    var camBox = document.getElementById('cam-box');
+    var video = document.getElementById('cam-video');
+    var msg = document.getElementById('cam-msg');
+    var stream = null, timer = null;
+    if (!('BarcodeDetector' in window) || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.isSecureContext) return;
+    camBtn.hidden = false;
+
+    function stop() {
+        if (timer) { clearInterval(timer); timer = null; }
+        if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
+        camBox.hidden = true;
+    }
+    document.getElementById('cam-stop').addEventListener('click', stop);
+
+    camBtn.addEventListener('click', function () {
+        msg.hidden = true;
+        var detector = new BarcodeDetector({ formats: ['code_128'] });
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }).then(function (s) {
+            stream = s; video.srcObject = s; camBox.hidden = false; video.play();
+            timer = setInterval(function () {
+                detector.detect(video).then(function (codes) {
+                    if (codes && codes.length && codes[0].rawValue) {
+                        input.value = codes[0].rawValue; stop(); form.submit();
+                    }
+                }).catch(function () {});
+            }, 300);
+        }).catch(function () {
+            msg.textContent = 'Không mở được camera. Hãy cho phép truy cập camera cho trang này, hoặc dùng súng quét / gõ mã.';
+            msg.hidden = false;
+        });
+    });
+})();
+</script>
