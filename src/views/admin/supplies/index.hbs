@@ -6,62 +6,174 @@
     <a href="/supplies/create" class="btn btn-primary">{{> icon name="plus"}} Thêm vật tư</a>
 </div>
 
-{{#if lowCount}}
-<div class="alert alert-warning">{{> icon name="alert"}} Có <b>{{lowCount}}</b> vật tư sắp hết, cần nhập thêm.</div>
-{{/if}}
-
-<div class="card flush">
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Tên vật tư</th>
-          <th class="num">Tồn kho</th>
-          <th>Đơn vị</th>
-          <th class="num">Giá nhập</th>
-          <th>Trạng thái</th>
-          <th>Nhập / Xuất</th>
-          <th>Thao tác</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each supplies}}
-        <tr>
-          <td><b>{{this.name}}</b></td>
-          <td class="num">{{this.quantity}}</td>
-          <td>{{this.unit}}</td>
-          <td class="num">{{formatPrice this.price}}</td>
-          <td>
-            {{#if this.isLow}}<span class="badge badge-warn">Sắp hết</span>{{else}}<span class="badge badge-ok">Đủ dùng</span>{{/if}}
-          </td>
-          <td>
-            <form action="/supplies/{{this._id}}/adjust" method="POST" class="table-actions">
-{{> csrf}}
-              <input class="field-input" type="number" name="amount" min="1" required aria-label="Số lượng">
-              <select class="field-select" name="type" aria-label="Loại">
-                <option value="in">Nhập</option>
-                <option value="out">Xuất</option>
-              </select>
-              <button type="submit" class="btn btn-secondary btn-sm">Áp dụng</button>
-            </form>
-          </td>
-          <td>
-            <div class="table-actions">
-              <a href="/supplies/{{this._id}}/edit" class="btn btn-secondary btn-sm">Sửa</a>
-              {{#if @root.isOwner}}
-              <form action="/supplies/{{this._id}}?_method=DELETE" method="POST"
-                    onsubmit="return confirm('Xóa vật tư này?')">
-{{> csrf}}
-                <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
-              </form>
-              {{/if}}
-            </div>
-          </td>
-        </tr>
-        {{else}}
-        <tr><td colspan="7" class="empty-state">Chưa có vật tư nào.</td></tr>
-        {{/each}}
-      </tbody>
-    </table>
-  </div>
+<div class="stat-grid">
+    <div class="stat"><div class="stat-label">Loại vật tư</div><div class="stat-value" id="s-total">0</div></div>
+    <div class="stat warn"><div class="stat-label">Sắp hết</div><div class="stat-value" id="s-low">0</div></div>
+    <div class="stat danger"><div class="stat-label">Hết hàng</div><div class="stat-value" id="s-out">0</div></div>
+    <div class="stat ok"><div class="stat-label">Giá trị tồn kho</div><div class="stat-value" id="s-value">0đ</div></div>
 </div>
+
+<div class="alert alert-warning" id="sup-alert" hidden>
+    {{> icon name="alert"}} <span id="sup-alert-text"></span>
+</div>
+
+<div class="sup-toolbar">
+    <div class="tabs" id="sup-tabs">
+        <a href="#" class="active" data-f="all">Tất cả <span class="tab-n" data-n="all"></span></a>
+        <a href="#" data-f="low">Sắp hết <span class="tab-n" data-n="low"></span></a>
+        <a href="#" data-f="out">Hết hàng <span class="tab-n" data-n="out"></span></a>
+    </div>
+    <input class="field-input sup-search" id="sup-search" type="search" placeholder="Tìm vật tư...">
+</div>
+
+<div class="sup-grid" id="sup-grid">
+    {{#each supplies}}
+    <article class="sup-card" data-name="{{this.name}}" data-q="{{this.quantity}}" data-min="{{this.minStock}}" data-price="{{this.price}}" data-low="{{#if this.isLow}}1{{else}}0{{/if}}">
+        <header class="sup-head">
+            <span class="sup-ic">{{> icon name="package"}}</span>
+            <div class="sup-title">
+                <b>{{this.name}}</b>
+                <small>Giá nhập: {{formatPrice this.price}} / {{this.unit}}</small>
+            </div>
+            <span class="badge sup-badge">Đủ dùng</span>
+        </header>
+
+        <div class="sup-qty"><strong>{{this.quantity}}</strong> <span>{{this.unit}}</span></div>
+        <div class="sup-bar"><i></i></div>
+        <div class="sup-min">Ngưỡng cảnh báo: {{this.minStock}} {{this.unit}}</div>
+
+        {{#if this.note}}<div class="sup-note">{{this.note}}</div>{{/if}}
+
+        <form action="/supplies/{{this._id}}/adjust" method="POST" class="sup-adjust">
+            {{> csrf}}
+            <button type="submit" name="type" value="out" class="btn btn-secondary sup-btn" title="Xuất kho">&minus; Xuất</button>
+            <input class="field-input" type="number" name="amount" min="1" value="1" required aria-label="Số lượng">
+            <button type="submit" name="type" value="in" class="btn btn-primary sup-btn" title="Nhập kho">+ Nhập</button>
+        </form>
+
+        <footer class="sup-foot">
+            <a href="/supplies/{{this._id}}/edit" class="btn btn-secondary btn-sm">Sửa</a>
+            {{#if @root.isOwner}}
+            <form action="/supplies/{{this._id}}?_method=DELETE" method="POST" onsubmit="return confirm('Xóa vật tư này?')">
+                {{> csrf}}
+                <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
+            </form>
+            {{/if}}
+        </footer>
+    </article>
+    {{else}}
+    <div class="card empty-state">Chưa có vật tư nào.</div>
+    {{/each}}
+</div>
+
+<script>
+(function () {
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.sup-card'));
+    if (!cards.length) return;
+    var filter = 'all', search = document.getElementById('sup-search');
+
+    function toast(msg, isError) {
+        var box = document.getElementById('toast-box');
+        if (!box) { box = document.createElement('div'); box.id = 'toast-box'; document.body.appendChild(box); }
+        var t = document.createElement('div');
+        t.className = 'toast' + (isError ? ' error' : '');
+        t.textContent = msg;
+        box.appendChild(t);
+        setTimeout(function () { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; }, 2500);
+        setTimeout(function () { t.remove(); }, 2900);
+    }
+
+    function render(c) {
+        var q = Number(c.dataset.q) || 0, min = Number(c.dataset.min) || 0;
+        var state = q <= 0 ? 'out' : (q <= min ? 'low' : 'ok');
+        c.dataset.state = state;
+        c.classList.remove('is-ok', 'is-low', 'is-out');
+        c.classList.add('is-' + state);
+        c.querySelector('.sup-qty strong').textContent = q;
+        var badge = c.querySelector('.sup-badge');
+        badge.className = 'badge sup-badge ' + (state === 'out' ? 'badge-danger' : state === 'low' ? 'badge-warn' : 'badge-ok');
+        badge.textContent = state === 'out' ? 'Hết hàng' : state === 'low' ? 'Sắp hết' : 'Đủ dùng';
+        c.querySelector('.sup-bar i').style.width = Math.min(100, Math.round(q / Math.max(min * 3, 1) * 100)) + '%';
+    }
+
+    function refresh() {
+        var counts = { all: cards.length, low: 0, out: 0 }, value = 0;
+        cards.forEach(function (c) {
+            var s = c.dataset.state;
+            if (s === 'low' || s === 'out') counts[s]++;
+            value += (Number(c.dataset.q) || 0) * (Number(c.dataset.price) || 0);
+        });
+        document.getElementById('s-total').textContent = counts.all;
+        document.getElementById('s-low').textContent = counts.low;
+        document.getElementById('s-out').textContent = counts.out;
+        document.getElementById('s-value').textContent = value.toLocaleString('vi-VN') + 'đ';
+        document.querySelectorAll('.tab-n').forEach(function (el) { el.textContent = counts[el.dataset.n]; });
+        var need = counts.low + counts.out, al = document.getElementById('sup-alert');
+        if (need) {
+            document.getElementById('sup-alert-text').innerHTML = 'Có <b>' + need + '</b> vật tư cần nhập thêm (' + counts.low + ' sắp hết, ' + counts.out + ' hết hàng).';
+        }
+        al.hidden = !need;
+        apply();
+    }
+
+    function apply() {
+        var kw = search.value.trim().toLowerCase();
+        cards.forEach(function (c) {
+            c.hidden = !((filter === 'all' || c.dataset.state === filter) && (!kw || c.dataset.name.toLowerCase().indexOf(kw) > -1));
+        });
+    }
+
+    cards.forEach(function (c) { render(c); });
+    refresh();
+
+    /* Nhập / Xuất không tải lại trang */
+    document.querySelectorAll('.sup-adjust').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var card = form.closest('.sup-card');
+            var btn = e.submitter;
+            var type = btn && btn.value ? btn.value : 'in';
+            var amount = Number(form.elements.amount.value);
+            if (!amount || amount < 1) { toast('Nhập số lượng lớn hơn 0', true); return; }
+            if (type === 'out' && amount > Number(card.dataset.q)) { toast('Không đủ tồn kho để xuất ' + amount, true); return; }
+
+            var body = new URLSearchParams(new FormData(form));
+            body.set('type', type);
+            var buttons = form.querySelectorAll('button');
+            buttons.forEach(function (b) { b.disabled = true; });
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'text/html' },
+                body: body.toString(),
+                credentials: 'same-origin',
+                redirect: 'follow'
+            }).then(function (res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                var q = Number(card.dataset.q) + (type === 'in' ? amount : -amount);
+                card.dataset.q = Math.max(0, q);
+                render(card);
+                refresh();
+                card.classList.add('flash');
+                setTimeout(function () { card.classList.remove('flash'); }, 700);
+                toast((type === 'in' ? 'Đã nhập ' : 'Đã xuất ') + amount + ' ' + card.querySelector('.sup-qty span').textContent + ' ' + card.dataset.name);
+            }).catch(function () {
+                toast('Không thực hiện được, thử lại sau', true);
+            }).then(function () {
+                buttons.forEach(function (b) { b.disabled = false; });
+            });
+        });
+    });
+
+    document.querySelectorAll('#sup-tabs a').forEach(function (t) {
+        t.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelectorAll('#sup-tabs a').forEach(function (x) { x.classList.remove('active'); });
+            t.classList.add('active');
+            filter = t.dataset.f;
+            apply();
+        });
+    });
+    search.addEventListener('input', apply);
+})();
+</script>

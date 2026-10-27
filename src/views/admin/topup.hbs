@@ -8,18 +8,67 @@
 {{#if error}}<div class="field-error">{{error}}</div>{{/if}}
 {{#if success}}<div class="field-success">{{success}}</div>{{/if}}
 
-<section class="card">
-    <form action="/admin/topup" method="POST" class="inline-form">
-        {{> csrf}}
-        <div class="field-group">
-            <label class="field-label" for="customer">Mã khách hàng hoặc số điện thoại</label>
-            <input class="field-input" id="customer" type="text" name="customer" value="{{old.customer}}" placeholder="VD: KH000001 hoặc 0912345678" required>
-            <span class="field-hint">Khách chưa có thẻ sẽ được tạo thẻ mới tự động.</span>
+<div class="tp-layout">
+    <section class="card tp-card">
+        <div class="tp-head">
+            <span class="sup-ic">{{> icon name="card"}}</span>
+            <div><h2>Thông tin nạp tiền</h2><p class="muted">Nhập mã khách hoặc số điện thoại, rồi chọn số tiền.</p></div>
         </div>
-        <div class="field-group">
-            <label class="field-label" for="amount">Số tiền nạp (đ)</label>
-            <input class="field-input" id="amount" type="number" name="amount" value="{{old.amount}}" min="1000" max="50000000" step="1000" placeholder="VD: 200000" required>
-        </div>
-        <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận đã nhận đủ tiền từ khách?')">{{> icon name="card"}} Nạp tiền</button>
-    </form>
-</section>
+
+        <form action="/admin/topup" method="POST" class="tp-form">
+            {{> csrf}}
+            <div class="field-group">
+                <label class="field-label" for="customer">Mã khách hàng hoặc số điện thoại</label>
+                <input class="field-input" id="customer" type="text" name="customer" value="{{old.customer}}" placeholder="VD: KH000001 hoặc 0912345678" required autofocus>
+                <span class="field-hint">Khách chưa có thẻ sẽ được tạo thẻ mới tự động.</span>
+            </div>
+
+            <div class="field-group">
+                <label class="field-label" for="amount">Số tiền nạp (đ)</label>
+                <div class="chip-row" id="tp-chips">
+                    <button type="button" class="chip" data-v="50000">50.000</button>
+                    <button type="button" class="chip" data-v="100000">100.000</button>
+                    <button type="button" class="chip" data-v="200000">200.000</button>
+                    <button type="button" class="chip" data-v="500000">500.000</button>
+                    <button type="button" class="chip" data-v="1000000">1.000.000</button>
+                </div>
+                <input class="field-input" id="amount" type="number" name="amount" value="{{old.amount}}" min="1000" max="50000000" step="1000" placeholder="VD: 200000" required>
+            </div>
+
+            <div class="tp-total">
+                <span>Số tiền sẽ nạp</span>
+                <strong id="tp-view">0đ</strong>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg btn-block" onclick="return confirm('Xác nhận đã nhận đủ tiền từ khách?')">{{> icon name="card"}} Xác nhận nạp tiền</button>
+        </form>
+    </section>
+
+    <aside class="card tp-help">
+        <h3>Lưu ý khi nạp</h3>
+        <ol>
+            <li>Nhận đủ tiền mặt hoặc xác nhận chuyển khoản từ khách.</li>
+            <li>Kiểm tra đúng <b>mã khách</b> hoặc <b>số điện thoại</b> trước khi nạp.</li>
+            <li>Số tiền từ <b>1.000đ</b> đến <b>50.000.000đ</b>, theo bước 1.000đ.</li>
+            <li>Sau khi nạp, số dư thẻ cập nhật ngay và dùng để thanh toán đơn.</li>
+        </ol>
+        <div class="callout">Nạp nhầm khách thì báo chủ tiệm để điều chỉnh, không tự nạp lại.</div>
+    </aside>
+</div>
+
+<script>
+(function () {
+    var amount = document.getElementById('amount'), view = document.getElementById('tp-view');
+    var chips = document.querySelectorAll('#tp-chips .chip');
+    function update() {
+        var v = Number(amount.value) || 0;
+        view.textContent = v.toLocaleString('vi-VN') + 'đ';
+        chips.forEach(function (c) { c.classList.toggle('on', Number(c.dataset.v) === v); });
+    }
+    chips.forEach(function (c) {
+        c.addEventListener('click', function () { amount.value = c.dataset.v; update(); });
+    });
+    amount.addEventListener('input', update);
+    update();
+})();
+</script>

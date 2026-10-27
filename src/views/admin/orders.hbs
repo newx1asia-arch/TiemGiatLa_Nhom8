@@ -3,10 +3,21 @@
         <h1>Quản lý đơn hàng</h1>
         <p>Theo dõi và cập nhật trạng thái: Chờ giặt, Đang giặt, Đã xong, Đã giao.</p>
     </div>
-    <a href="/orders/create" class="btn btn-primary">{{> icon name="plus"}} Tạo đơn hàng</a>
+    <div class="os-head-actions">
+        <button type="button" class="btn btn-secondary" id="os-export">Xuất CSV</button>
+        <button type="button" class="btn btn-secondary" onclick="window.print()">In danh sách</button>
+        <a href="/orders/create" class="btn btn-primary">{{> icon name="plus"}} Tạo đơn hàng</a>
+    </div>
 </div>
 
 {{#if notice}}<div class="field-error">{{notice}}</div>{{/if}}
+
+<div class="stat-grid os-stats">
+    <div class="stat"><div class="stat-label">Đơn nhận hôm nay</div><div class="stat-value" id="os-today">0</div></div>
+    <div class="stat warn"><div class="stat-label">Đang chờ xử lý</div><div class="stat-value" id="os-wait">0</div></div>
+    <div class="stat danger"><div class="stat-label">Quá hạn trả</div><div class="stat-value" id="os-late">0</div></div>
+    <div class="stat warn"><div class="stat-label">Chưa thanh toán</div><div class="stat-value" id="os-unpaid">0</div><div class="stat-sub" id="os-unpaid-sum"></div></div>
+</div>
 
 <div class="card flush">
     <form method="GET" action="/admin/orders" class="toolbar">
@@ -22,10 +33,32 @@
     </form>
 
     {{#if orders.length}}
+    <div class="os-filters">
+        <input class="field-input os-live" id="os-live" type="search" placeholder="Lọc nhanh: tên khách, SĐT, dịch vụ, mã...">
+        <select class="field-select" id="os-pay">
+            <option value="all">Mọi thanh toán</option>
+            <option value="unpaid">Chưa thanh toán</option>
+            <option value="paid">Đã thanh toán</option>
+        </select>
+        <label class="os-check"><input type="checkbox" id="os-onlylate"> Chỉ đơn quá hạn</label>
+        <select class="field-select" id="os-sort">
+            <option value="default">Sắp xếp: mặc định</option>
+            <option value="return">Hẹn trả gần nhất</option>
+            <option value="total">Tiền cao nhất</option>
+        </select>
+    </div>
+
+    <div class="os-bulk" id="os-bulk" hidden>
+        <span><b id="os-bulk-n">0</b> đơn được chọn</span>
+        <button type="button" class="btn btn-primary btn-sm" id="os-bulk-go">Chuyển sang bước tiếp theo</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="os-bulk-clear">Bỏ chọn</button>
+    </div>
+
     <div class="table-wrap">
-        <table>
+        <table class="os-table">
             <thead>
                 <tr>
+                    <th class="os-cb"><input type="checkbox" id="os-all" aria-label="Chọn tất cả"></th>
                     <th>Mã đơn</th>
                     <th>Khách hàng</th>
                     <th>Dịch vụ</th>
@@ -34,43 +67,65 @@
                     <th class="num">Tổng tiền</th>
                     <th>Thanh toán</th>
                     <th>Trạng thái</th>
-                    <th>Thao tác</th>
+                    <th class="text-right">Thao tác</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="os-body">
                 {{#each orders}}
-                <tr>
-                    <td class="mono nowrap"><a href="/orders/invoice/{{_id}}">{{code}}</a></td>
+                <tr class="os-row" data-status="{{statusClass status}}" data-total="{{totalAmount}}" data-received="{{receivedDate}}" data-return="{{returnDate}}" data-next="{{#if nextStatus}}1{{else}}0{{/if}}" data-text="{{code}} {{customer.name}} {{customer.phone}} {{serviceSummary}}">
+                    <td class="os-cb"><input type="checkbox" class="os-pick" aria-label="Chọn {{code}}"></td>
+                    <td class="mono nowrap"><a href="/orders/invoice/{{_id}}"><b>{{code}}</b></a></td>
                     <td>
-                        {{#if customer}}<b>{{customer.name}}</b><br><span class="muted">{{customer.phone}}</span>{{else}}—{{/if}}
+                        {{#if customer}}<b>{{customer.name}}</b><div class="muted os-sm">{{customer.phone}}</div>{{else}}—{{/if}}
                     </td>
-                    <td>{{serviceSummary}}</td>
+                    <td class="os-svc">{{serviceSummary}}</td>
                     <td class="nowrap">{{dateFormat receivedDate}}</td>
-                    <td class="nowrap">{{dateFormat returnDate}}</td>
-                    <td class="num nowrap">{{formatPrice totalAmount}}</td>
+                    <td class="nowrap"><span class="os-return">{{dateFormat returnDate}}</span><div class="os-late-tag" hidden></div></td>
+                    <td class="num nowrap"><b>{{formatPrice totalAmount}}</b></td>
                     <td>
-                        <span class="badge {{payStatusClass paymentStatus}}">{{payStatusLabel paymentStatus}}</span><br>
-                        <span class="muted">{{payLabel paymentMethod}}</span>
+                        <span class="badge os-pay {{payStatusClass paymentStatus}}">{{payStatusLabel paymentStatus}}</span>
+                        <div class="muted os-sm">{{payLabel paymentMethod}}</div>
                     </td>
                     <td><span class="status-badge {{statusClass status}}">{{statusLabel status}}</span></td>
                     <td>
-                        {{#if canCollect}}<a href="/orders/invoice/{{_id}}#thu-tien" class="btn btn-primary btn-sm">Thu tiền</a>{{/if}}
-                        {{#if canEdit}}<a href="/orders/{{_id}}/edit" class="btn btn-secondary btn-sm">Sửa</a>{{/if}}
-                        {{#if nextStatus}}
-                        <form action="/admin/orders/{{_id}}/status" method="POST" class="table-actions">
-{{> csrf}}
-                            <input type="hidden" name="backTo" value="{{../backTo}}">
-                            <button type="submit" class="btn btn-secondary btn-sm">Chuyển: {{nextLabel}}</button>
-                        </form>
-                        {{else}}
-                        {{#if isCancelled}}<span class="muted">Đã hủy</span>{{else}}<span class="muted">Hoàn tất</span>{{/if}}
-                        {{/if}}
+                        <div class="os-actions">
+                            {{#if canCollect}}
+                                <a href="/orders/invoice/{{_id}}#thu-tien" class="btn btn-primary btn-sm">Thu tiền</a>
+                            {{else}}
+                                {{#if nextStatus}}
+                                <form action="/admin/orders/{{_id}}/status" method="POST" class="os-status-form">
+                                    {{> csrf}}
+                                    <input type="hidden" name="backTo" value="{{../backTo}}">
+                                    <button type="submit" class="btn btn-primary btn-sm">Chuyển: {{nextLabel}}</button>
+                                </form>
+                                {{else}}
+                                    {{#if isCancelled}}<span class="muted">Đã hủy</span>{{else}}<span class="muted">Hoàn tất</span>{{/if}}
+                                {{/if}}
+                            {{/if}}
+
+                            <details class="os-menu">
+                                <summary aria-label="Thêm thao tác">&#8943;</summary>
+                                <div class="os-menu-box">
+                                    <a href="/orders/invoice/{{_id}}">Xem hóa đơn</a>
+                                    {{#if canEdit}}<a href="/orders/{{_id}}/edit">Sửa đơn</a>{{/if}}
+                                    {{#if canCollect}}{{#if nextStatus}}
+                                    <form action="/admin/orders/{{_id}}/status" method="POST" class="os-status-form">
+                                        {{> csrf}}
+                                        <input type="hidden" name="backTo" value="{{../backTo}}">
+                                        <button type="submit">Chuyển: {{nextLabel}}</button>
+                                    </form>
+                                    {{/if}}{{/if}}
+                                </div>
+                            </details>
+                        </div>
                     </td>
                 </tr>
                 {{/each}}
             </tbody>
         </table>
     </div>
+
+    <div class="cu-empty" id="os-empty" hidden>Không có đơn nào khớp bộ lọc.</div>
 
     <div class="pagination">
         {{#if hasPrev}}<a href="{{prevHref}}">&laquo; Trước</a>{{/if}}
@@ -84,3 +139,136 @@
     </div>
     {{/if}}
 </div>
+
+<script>
+(function () {
+    var body = document.getElementById('os-body');
+    if (!body) return;
+    var rows = Array.prototype.slice.call(body.querySelectorAll('.os-row'));
+    var orig = rows.slice();
+    var DAY = 86400000;
+    var startToday = new Date(); startToday.setHours(0, 0, 0, 0);
+
+    function toast(msg, err) {
+        var box = document.getElementById('toast-box');
+        if (!box) { box = document.createElement('div'); box.id = 'toast-box'; document.body.appendChild(box); }
+        var t = document.createElement('div'); t.className = 'toast' + (err ? ' error' : ''); t.textContent = msg;
+        box.appendChild(t); setTimeout(function () { t.remove(); }, 3000);
+    }
+    function money(n) { return n.toLocaleString('vi-VN') + 'đ'; }
+
+    /* Phân tích từng dòng */
+    var today = 0, wait = 0, late = 0, unpaid = 0, unpaidSum = 0;
+    rows.forEach(function (r) {
+        var st = r.dataset.status, total = Number(r.dataset.total) || 0;
+        var done = st.indexOf('da-giao') > -1 || st.indexOf('da-huy') > -1;
+        var rec = new Date(r.dataset.received), ret = new Date(r.dataset.return);
+        r._ret = isNaN(ret) ? 0 : ret.getTime();
+        r._total = total;
+        r._late = !done && r._ret && r._ret < startToday.getTime();
+        var payTxt = r.querySelector('.os-pay').textContent.trim().toLowerCase();
+        r._unpaid = !done && payTxt.indexOf('chưa') === 0;
+        r._paid = payTxt.indexOf('đã thanh toán') === 0;
+        if (!isNaN(rec) && rec >= startToday) today++;
+        if (st.indexOf('cho-giat') > -1 || st.indexOf('dang-giat') > -1) wait++;
+        if (r._late) {
+            late++;
+            r.classList.add('is-late');
+            var days = Math.max(1, Math.floor((startToday.getTime() - r._ret) / DAY));
+            var tag = r.querySelector('.os-late-tag');
+            tag.textContent = 'Trễ ' + days + ' ngày'; tag.hidden = false;
+        }
+        if (r._unpaid) { unpaid++; unpaidSum += total; }
+    });
+    document.getElementById('os-today').textContent = today;
+    document.getElementById('os-wait').textContent = wait;
+    document.getElementById('os-late').textContent = late;
+    document.getElementById('os-unpaid').textContent = unpaid;
+    document.getElementById('os-unpaid-sum').textContent = unpaid ? 'Tổng ' + money(unpaidSum) : '';
+
+    /* Lọc + sắp xếp */
+    var live = document.getElementById('os-live'), pay = document.getElementById('os-pay'),
+        onlyLate = document.getElementById('os-onlylate'), sort = document.getElementById('os-sort');
+    function apply() {
+        var kw = live.value.trim().toLowerCase(), shown = 0;
+        var list = orig.slice();
+        if (sort.value === 'return') list.sort(function (a, b) { return (a._ret || 9e15) - (b._ret || 9e15); });
+        if (sort.value === 'total') list.sort(function (a, b) { return b._total - a._total; });
+        list.forEach(function (r) {
+            var ok = (!kw || r.dataset.text.toLowerCase().indexOf(kw) > -1) &&
+                     (pay.value === 'all' || (pay.value === 'unpaid' && r._unpaid) || (pay.value === 'paid' && r._paid)) &&
+                     (!onlyLate.checked || r._late);
+            r.hidden = !ok; if (ok) shown++;
+            body.appendChild(r);
+        });
+        document.getElementById('os-empty').hidden = shown > 0;
+        updateBulk();
+    }
+    [live].forEach(function (el) { el.addEventListener('input', apply); });
+    [pay, sort, onlyLate].forEach(function (el) { el.addEventListener('change', apply); });
+
+    /* Chọn nhiều + chuyển hàng loạt */
+    var all = document.getElementById('os-all'), bar = document.getElementById('os-bulk');
+    function picked() { return rows.filter(function (r) { return !r.hidden && r.querySelector('.os-pick').checked; }); }
+    function updateBulk() {
+        var p = picked();
+        document.getElementById('os-bulk-n').textContent = p.length;
+        bar.hidden = p.length === 0;
+        rows.forEach(function (r) { r.classList.toggle('is-picked', r.querySelector('.os-pick').checked); });
+    }
+    body.addEventListener('change', function (e) { if (e.target.classList.contains('os-pick')) updateBulk(); });
+    all.addEventListener('change', function () {
+        rows.forEach(function (r) { if (!r.hidden) r.querySelector('.os-pick').checked = all.checked; });
+        updateBulk();
+    });
+    document.getElementById('os-bulk-clear').addEventListener('click', function () {
+        rows.forEach(function (r) { r.querySelector('.os-pick').checked = false; }); all.checked = false; updateBulk();
+    });
+    document.getElementById('os-bulk-go').addEventListener('click', function () {
+        var targets = picked().filter(function (r) { return r.querySelector('.os-status-form'); });
+        if (!targets.length) { toast('Các đơn đã chọn không còn bước tiếp theo', true); return; }
+        if (!confirm('Chuyển ' + targets.length + ' đơn sang bước tiếp theo?')) return;
+        var ok = 0, i = 0;
+        (function next() {
+            if (i >= targets.length) {
+                toast('Đã chuyển ' + ok + '/' + targets.length + ' đơn');
+                setTimeout(function () { location.reload(); }, 800);
+                return;
+            }
+            var f = targets[i++].querySelector('.os-status-form');
+            fetch(f.action, { method: 'POST', credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(new FormData(f)).toString() })
+            .then(function (res) { if (res.ok) ok++; }).catch(function () {}).then(next);
+        })();
+    });
+
+    /* Bấm dòng để mở hóa đơn (trừ khi bấm nút, link, ô chọn) */
+    body.addEventListener('click', function (e) {
+        if (e.target.closest('a, button, input, summary, details, form, label')) return;
+        var tr = e.target.closest('.os-row'); if (!tr) return;
+        location.href = tr.querySelector('a[href*="/orders/invoice/"]').href;
+    });
+
+    /* Xuất CSV các dòng đang hiển thị */
+    document.getElementById('os-export').addEventListener('click', function () {
+        var out = [['Mã đơn', 'Khách hàng', 'SĐT', 'Dịch vụ', 'Ngày nhận', 'Hẹn trả', 'Tổng tiền', 'Thanh toán', 'Trạng thái']];
+        rows.forEach(function (r) {
+            if (r.hidden) return;
+            var c = r.children;
+            out.push([c[1].textContent.trim(), c[2].querySelector('b') ? c[2].querySelector('b').textContent : '',
+                c[2].querySelector('.muted') ? c[2].querySelector('.muted').textContent : '',
+                c[3].textContent.trim(), c[4].textContent.trim(), r.querySelector('.os-return').textContent.trim(),
+                r._total, r.querySelector('.os-pay').textContent.trim(), c[8].textContent.trim()]);
+        });
+        var csv = '\ufeff' + out.map(function (l) { return l.map(function (v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(','); }).join('\n');
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+        a.download = 'don-hang.csv'; a.click();
+    });
+
+    document.addEventListener('click', function (e) {
+        document.querySelectorAll('.os-menu[open]').forEach(function (d) { if (!d.contains(e.target)) d.removeAttribute('open'); });
+    });
+})();
+</script>

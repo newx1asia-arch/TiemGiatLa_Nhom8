@@ -1,44 +1,89 @@
-<div class="card form-narrow">
+<div class="sf-wrap">
   <form method="POST"
-        action="{{#if supply}}/supplies/{{supply._id}}?_method=PUT{{else}}/supplies{{/if}}">
-{{> csrf}}
-{{#if error}}<div class="alert alert-danger">{{error}}</div>{{/if}}
+        action="{{#if supply}}/supplies/{{supply._id}}?_method=PUT{{else}}/supplies{{/if}}"
+        class="card sf-card">
+    {{> csrf}}
 
-    <div class="field-group">
-      <label class="field-label" for="name">Tên vật tư</label>
-      <input class="field-input" id="name" name="name" value="{{supply.name}}" placeholder="Xà phòng, Nước xả, Bao bì..." required>
-    </div>
-
-    <div class="field-row">
-      <div class="field-group">
-        <label class="field-label" for="unit">Đơn vị</label>
-        <input class="field-input" id="unit" name="unit" value="{{#if supply}}{{supply.unit}}{{else}}cái{{/if}}">
-      </div>
-      <div class="field-group">
-        <label class="field-label" for="quantity">Số lượng tồn</label>
-        <input class="field-input" id="quantity" type="number" name="quantity" min="0" value="{{#if supply}}{{supply.quantity}}{{else}}0{{/if}}">
+    <div class="sf-head">
+      <span class="sup-ic">{{> icon name="package"}}</span>
+      <div>
+        <h2>{{#if supply}}Sửa vật tư{{else}}Thêm vật tư mới{{/if}}</h2>
+        <p class="muted">{{#if supply}}Cập nhật thông tin và định mức cho <b>{{supply.name}}</b>.{{else}}Khai báo vật tư để theo dõi tồn kho.{{/if}}</p>
       </div>
     </div>
 
-    <div class="field-row">
+    {{#if error}}<div class="alert alert-danger">{{error}}</div>{{/if}}
+
+    <div class="sf-section">
+      <div class="sf-title">Thông tin chung</div>
       <div class="field-group">
-        <label class="field-label" for="minStock">Ngưỡng cảnh báo sắp hết</label>
-        <input class="field-input" id="minStock" type="number" name="minStock" min="0" value="{{#if supply}}{{supply.minStock}}{{else}}5{{/if}}">
+        <label class="field-label" for="name">Tên vật tư</label>
+        <input class="field-input" id="name" name="name" value="{{supply.name}}" placeholder="Xà phòng, Nước xả, Bao bì..." required>
       </div>
-      <div class="field-group">
-        <label class="field-label" for="price">Giá nhập (đ)</label>
-        <input class="field-input" id="price" type="number" name="price" min="0" value="{{#if supply}}{{supply.price}}{{else}}0{{/if}}">
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label" for="unit">Đơn vị tính</label>
+          <input class="field-input" id="unit" name="unit" value="{{#if supply}}{{supply.unit}}{{else}}cái{{/if}}" placeholder="cái, kg, lít...">
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="price">Giá nhập (đ)</label>
+          <input class="field-input" id="price" type="number" name="price" min="0" value="{{#if supply}}{{supply.price}}{{else}}0{{/if}}">
+          <span class="field-hint" id="price-view"></span>
+        </div>
       </div>
     </div>
 
-    <div class="field-group">
-      <label class="field-label" for="note">Ghi chú</label>
-      <input class="field-input" id="note" name="note" value="{{supply.note}}">
+    <div class="sf-section">
+      <div class="sf-title">Tồn kho và cảnh báo</div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label" for="quantity">Số lượng tồn</label>
+          <input class="field-input" id="quantity" type="number" name="quantity" min="0" value="{{#if supply}}{{supply.quantity}}{{else}}0{{/if}}">
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="minStock">Ngưỡng cảnh báo sắp hết</label>
+          <input class="field-input" id="minStock" type="number" name="minStock" min="0" value="{{#if supply}}{{supply.minStock}}{{else}}5{{/if}}">
+        </div>
+      </div>
+
+      <div class="sf-preview">
+        <div class="sf-preview-top"><span>Xem trước trạng thái</span><span class="badge" id="pv-badge">Đủ dùng</span></div>
+        <div class="sup-bar"><i id="pv-bar"></i></div>
+        <div class="sup-min" id="pv-text"></div>
+      </div>
     </div>
 
-    <div class="form-actions">
-      <button type="submit" class="btn btn-primary">Lưu</button>
-      <a href="/supplies" class="btn btn-secondary">Hủy</a>
+    <div class="sf-section">
+      <div class="sf-title">Ghi chú</div>
+      <div class="field-group flush">
+        <input class="field-input" id="note" name="note" value="{{supply.note}}" placeholder="Nhà cung cấp, quy cách đóng gói... (không bắt buộc)">
+      </div>
+    </div>
+
+    <div class="form-actions sf-actions">
+      <button type="submit" class="btn btn-primary btn-lg">Lưu thay đổi</button>
+      <a href="/supplies" class="btn btn-secondary btn-lg">Hủy</a>
     </div>
   </form>
 </div>
+
+<script>
+(function () {
+    var q = document.getElementById('quantity'), m = document.getElementById('minStock'),
+        p = document.getElementById('price'), u = document.getElementById('unit');
+    var bar = document.getElementById('pv-bar'), badge = document.getElementById('pv-badge'),
+        text = document.getElementById('pv-text'), pv = document.getElementById('price-view');
+    function update() {
+        var qty = Number(q.value) || 0, min = Number(m.value) || 0;
+        var s = qty <= 0 ? 'out' : (qty <= min ? 'low' : 'ok');
+        badge.className = 'badge ' + (s === 'out' ? 'badge-danger' : s === 'low' ? 'badge-warn' : 'badge-ok');
+        badge.textContent = s === 'out' ? 'Hết hàng' : s === 'low' ? 'Sắp hết' : 'Đủ dùng';
+        bar.className = 'pv-' + s;
+        bar.style.width = Math.min(100, Math.round(qty / Math.max(min * 3, 1) * 100)) + '%';
+        text.textContent = 'Tồn ' + qty + ' ' + (u.value || '') + ' · cảnh báo khi còn từ ' + min + ' trở xuống';
+        pv.textContent = (Number(p.value) || 0).toLocaleString('vi-VN') + 'đ / ' + (u.value || 'đơn vị');
+    }
+    [q, m, p, u].forEach(function (el) { el.addEventListener('input', update); });
+    update();
+})();
+</script>
