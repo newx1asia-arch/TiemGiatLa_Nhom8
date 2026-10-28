@@ -5,6 +5,12 @@
             <span>Tiệm Giặt Là</span>
         </a>
 
+        <!-- THÊM: nút menu cho điện thoại -->
+        <input type="checkbox" id="nav-toggle" class="nav-toggle" hidden>
+        <label for="nav-toggle" class="nav-burger" aria-label="Mở menu">
+            <span></span><span></span><span></span>
+        </label>
+
         <nav class="nav-links" aria-label="Điều hướng chính">
             <a href="/" class="{{isExact currentPath '/'}}">Trang chủ</a>
             <a href="/#bang-gia">Bảng giá</a>
@@ -20,9 +26,9 @@
 
                 <span class="nav-user">
                     <span class="avatar">{{initials currentCustomer.name}}</span>
-                    <span>{{currentCustomer.name}}</span>
+                    <span class="nav-user-name">{{currentCustomer.name}}</span> <!-- THÊM class -->
                 </span>
-                <form action="/auth/logout" method="POST">
+                <form action="/auth/logout" method="POST" class="nav-logout"> <!-- THÊM class -->
 {{> csrf}}
                     <button type="submit" class="btn-link">Thoát</button>
                 </form>

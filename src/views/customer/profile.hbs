@@ -1,51 +1,66 @@
 <div class="pf" data-points="{{customer.points}}" data-lifetime="{{customer.lifetimePoints}}">
 
-    <div class="page-head">
-        <h1>Hồ sơ của tôi</h1>
-    </div>
-
     <!-- Thẻ thành viên -->
-    <section class="card">
-        <div class="profile-head">
-            <span class="avatar">{{initials customer.name}}</span>
-            <div>
-                <h2>{{customer.name}}</h2>
-                <span class="customer-code">{{customer.code}}</span>
+    <section class="pf-hero t0" id="pfHero">
+        <div class="pf-hero-top">
+            <span class="pf-avatar">{{initials customer.name}}</span>
+            <div class="pf-who">
+                <span class="pf-hello">Hồ sơ của tôi</span>
+                <h1>{{customer.name}}</h1>
+                <span class="pf-code">{{customer.code}}</span>
             </div>
-            <span class="tier t0 tier-badge" id="pfTier">Đồng</span>
+            <span class="pf-tier" id="pfTier">Đồng</span>
         </div>
 
-        <div class="meter">
-            <div class="meter-top">
+        <div class="pf-meter">
+            <div class="pf-meter-top">
                 <span id="pfNow">Thành viên Đồng</span>
                 <span id="pfNext">Còn 100 điểm để lên hạng Bạc</span>
             </div>
-            <div class="progress-track"><i id="pfFill"></i></div>
+            <div class="pf-track"><i id="pfFill"></i></div>
         </div>
     </section>
 
     <!-- Thống kê -->
-    <section class="profile-stats">
-        <div class="stat">
-            <div class="stat-label">Điểm tích lũy</div>
-            <div class="stat-value">{{#if customer.points}}{{customer.points}}{{else}}0{{/if}}</div>
+    <section class="pf-stats">
+        <div class="pf-stat">
+            <span class="pf-stat-ic c-teal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6.5 7 .9-5.1 4.9 1.3 7L12 17.8 5.8 21.3l1.3-7L2 9.4l7-.9z"/></svg>
+            </span>
+            <div>
+                <div class="pf-stat-label">Điểm tích lũy</div>
+                <div class="pf-stat-value">{{#if customer.points}}{{customer.points}}{{else}}0{{/if}}</div>
+            </div>
         </div>
-        <div class="stat ok">
-            <div class="stat-label">Số đơn đã gửi</div>
-            <div class="stat-value">{{#if orderCount}}{{orderCount}}{{else}}0{{/if}}</div>
+        <div class="pf-stat">
+            <span class="pf-stat-ic c-green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            </span>
+            <div>
+                <div class="pf-stat-label">Số đơn đã gửi</div>
+                <div class="pf-stat-value">{{#if orderCount}}{{orderCount}}{{else}}0{{/if}}</div>
+            </div>
         </div>
-        <div class="stat warn">
-            <div class="stat-label">Hạng thành viên</div>
-            <div class="stat-value" id="pfTierName">Đồng</div>
+        <div class="pf-stat">
+            <span class="pf-stat-ic c-amber">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20"/></svg>
+            </span>
+            <div>
+                <div class="pf-stat-label">Hạng thành viên</div>
+                <div class="pf-stat-value" id="pfTierName">Đồng</div>
+            </div>
         </div>
     </section>
 
-    <p class="field-hint">Tích điểm: mỗi {{formatPrice loyalty.earnUnit}} thanh toán được 1 điểm. Dùng điểm: 1 điểm giảm {{formatPrice loyalty.pointValue}}, tối đa {{loyalty.maxRedeemPercent}}% giá trị đơn. Điểm được cộng sau khi đơn được thanh toán.</p>
+    <p class="pf-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <span>Tích điểm: mỗi {{formatPrice loyalty.earnUnit}} thanh toán được 1 điểm. Dùng điểm: 1 điểm giảm {{formatPrice loyalty.pointValue}}, tối đa {{loyalty.maxRedeemPercent}}% giá trị đơn. Điểm được cộng sau khi đơn được thanh toán.</span>
+    </p>
 
-    <div class="profile-grid">
-        <section class="card">
+    <div class="pf-grid">
+        <section class="pf-card">
             <h3>Thông tin liên hệ</h3>
-            <ul class="info-list">
+            <ul class="pf-info">
                 <li><span>Mã khách hàng</span><b class="mono">{{customer.code}}</b></li>
                 <li><span>Số điện thoại</span><b>{{customer.phone}}</b></li>
                 <li><span>Email</span><b>{{#if customer.email}}{{customer.email}}{{else}}<em>Chưa cập nhật</em>{{/if}}</b></li>
@@ -54,14 +69,14 @@
             </ul>
         </section>
 
-        <section class="card">
+        <section class="pf-card">
             <h3>Dịch vụ của tôi</h3>
-            <div class="action-list">
-                {{#if isStaff}}<a href="/orders/create" class="main">{{> icon name="plus"}}<span><b>Tạo đơn giặt mới</b><small>Lập đơn tại quầy</small></span></a>{{/if}}
-                <a href="/me/history">{{> icon name="clock"}}<span><b>Lịch sử giặt</b><small>Xem các đơn đã gửi</small></span></a>
-                <a href="/me/card">{{> icon name="card"}}<span><b>Thẻ trả trước</b><small>Số dư và giao dịch</small></span></a>
-                <a href="/me/profile/edit">{{> icon name="edit"}}<span><b>Chỉnh sửa thông tin</b><small>Cập nhật email, địa chỉ</small></span></a>
-                <a href="/me/change-password">{{> icon name="lock"}}<span><b>Đổi mật khẩu</b><small>Bảo vệ tài khoản</small></span></a>
+            <div class="pf-actions">
+                {{#if isStaff}}<a href="/orders/create" class="main"><i class="pf-ic">{{> icon name="plus"}}</i><span><b>Tạo đơn giặt mới</b><small>Lập đơn tại quầy</small></span></a>{{/if}}
+                <a href="/me/history"><i class="pf-ic">{{> icon name="clock"}}</i><span><b>Lịch sử giặt</b><small>Xem các đơn đã gửi</small></span></a>
+                <a href="/me/card"><i class="pf-ic">{{> icon name="card"}}</i><span><b>Thẻ trả trước</b><small>Số dư và giao dịch</small></span></a>
+                <a href="/me/profile/edit"><i class="pf-ic">{{> icon name="edit"}}</i><span><b>Chỉnh sửa thông tin</b><small>Cập nhật email, địa chỉ</small></span></a>
+                <a href="/me/change-password"><i class="pf-ic">{{> icon name="lock"}}</i><span><b>Đổi mật khẩu</b><small>Bảo vệ tài khoản</small></span></a>
             </div>
         </section>
     </div>
@@ -69,14 +84,12 @@
 
 <script>
 (function () {
-    // Mốc điểm các hạng: sửa theo quy định của tiệm
     var tiers = [
         { name: 'Đồng',      min: 0,   cls: 't0' },
         { name: 'Bạc',       min: 100, cls: 't1' },
         { name: 'Vàng',      min: 300, cls: 't2' },
         { name: 'Kim cương', min: 600, cls: 't3' }
     ];
-    // Hạng xét theo TỔNG điểm đã tích (không bị tụt hạng khi tiêu điểm)
     var pf = document.querySelector('.pf');
     var pts = Math.max(parseInt(pf.dataset.points, 10) || 0, parseInt(pf.dataset.lifetime, 10) || 0);
 
@@ -85,9 +98,8 @@
     var cur = tiers[idx], next = tiers[idx + 1];
 
     document.getElementById('pfTierName').textContent = cur.name;
-    var badge = document.getElementById('pfTier');
-    badge.textContent = cur.name;
-    badge.className = 'tier tier-badge ' + cur.cls;
+    document.getElementById('pfTier').textContent = cur.name;
+    document.getElementById('pfHero').className = 'pf-hero ' + cur.cls;
     document.getElementById('pfNow').textContent = 'Thành viên ' + cur.name;
 
     var percent = 100;
@@ -97,6 +109,9 @@
     } else {
         document.getElementById('pfNext').textContent = 'Đã đạt hạng cao nhất';
     }
-    document.getElementById('pfFill').style.width = Math.max(percent, 3) + '%';
+    var fill = document.getElementById('pfFill');
+    requestAnimationFrame(function () {
+        fill.style.width = Math.max(percent, 3) + '%';
+    });
 })();
 </script>

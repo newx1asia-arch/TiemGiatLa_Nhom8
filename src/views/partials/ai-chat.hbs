@@ -1,93 +1,185 @@
-<style>
-    .ai-fab { position: fixed; right: 1.1rem; bottom: 1.1rem; z-index: 60; display: flex; align-items: center; gap: .45rem; padding: .7rem 1.05rem; border: 0; border-radius: 999px; background: #1F6FB2; color: #fff; font: inherit; font-weight: 600; cursor: pointer; box-shadow: 0 6px 20px rgba(15, 40, 80, .28); }
-    .ai-fab:hover { background: #185a93; }
-    .ai-panel { position: fixed; right: 1.1rem; bottom: 4.6rem; z-index: 61; width: 360px; max-width: calc(100vw - 2rem); height: 520px; max-height: calc(100vh - 6rem); display: none; flex-direction: column; background: #fff; color: #1b2430; border: 1px solid #d9e0e8; border-radius: 14px; box-shadow: 0 12px 40px rgba(15, 40, 80, .3); overflow: hidden; }
-    .ai-panel.open { display: flex; }
-    .ai-head { display: flex; align-items: center; justify-content: space-between; padding: .75rem 1rem; background: #1F6FB2; color: #fff; }
-    .ai-head b { font-size: .98rem; }
-    .ai-head small { display: block; opacity: .85; font-size: .74rem; }
-    .ai-close { background: none; border: 0; color: #fff; font-size: 1.4rem; line-height: 1; cursor: pointer; }
-    .ai-log { flex: 1; overflow-y: auto; padding: .85rem; display: flex; flex-direction: column; gap: .55rem; background: #f5f8fb; }
-    .ai-msg { max-width: 86%; padding: .55rem .8rem; border-radius: 12px; font-size: .92rem; line-height: 1.45; white-space: pre-wrap; word-wrap: break-word; }
-    .ai-msg.bot { align-self: flex-start; background: #fff; border: 1px solid #e0e6ed; }
-    .ai-msg.me { align-self: flex-end; background: #1F6FB2; color: #fff; }
-    .ai-msg.err { align-self: flex-start; background: #fdecea; color: #8a1f17; border: 1px solid #f3c6c1; }
-    .ai-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
-    .ai-chip { border: 1px solid #1F6FB2; background: #fff; color: #1F6FB2; border-radius: 999px; padding: .28rem .7rem; font: inherit; font-size: .8rem; cursor: pointer; }
-    .ai-chip:hover { background: #e8f1fa; }
-    .ai-form { display: flex; gap: .5rem; padding: .65rem; border-top: 1px solid #e0e6ed; background: #fff; }
-    .ai-form input { flex: 1; min-width: 0; padding: .55rem .7rem; border: 1px solid #c9d3de; border-radius: 8px; font: inherit; }
-    .ai-form button { padding: .55rem .9rem; border: 0; border-radius: 8px; background: #1F6FB2; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
-    .ai-form button:disabled { opacity: .55; cursor: default; }
-    .ai-note { padding: 0 .85rem .55rem; font-size: .72rem; color: #6b7785; background: #fff; }
-    @media print { .ai-fab, .ai-panel { display: none !important; } }
-</style>
+<button id="aiToggle" class="ai-fab" type="button" aria-label="Mở trợ lý AI">
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+  <span>Tư vấn AI</span>
+</button>
 
-<button type="button" class="ai-fab no-print" id="aiFab" aria-expanded="false" aria-controls="aiPanel">💬 Tư vấn AI</button>
-<section class="ai-panel no-print" id="aiPanel" role="dialog" aria-label="Trợ lý AI tư vấn" data-csrf="{{csrfToken}}" data-name="{{currentCustomer.name}}">
-    <div class="ai-head">
-        <div><b>Trợ lý Tiệm Giặt Là</b><small>Tư vấn dịch vụ, bảng giá, mẹo giặt</small></div>
-        <button type="button" class="ai-close" id="aiClose" aria-label="Đóng">&times;</button>
+<section id="aiPanel" class="ai-panel" data-csrf="{{csrfToken}}" hidden aria-label="Trợ lý Tiệm Giặt Là">
+  <header class="ai-head">
+    <div class="ai-avatar" aria-hidden="true">🧺</div>
+    <div class="ai-title">
+      <strong>Trợ lý Tiệm Giặt Là</strong>
+      <small><i class="ai-dot"></i>Trực tuyến, trả lời trong vài giây</small>
     </div>
-    <div class="ai-log" id="aiLog" aria-live="polite"></div>
-    <form class="ai-form" id="aiForm" autocomplete="off">
-        <input type="text" id="aiInput" maxlength="500" placeholder="Nhập câu hỏi..." aria-label="Câu hỏi của bạn">
-        <button type="submit" id="aiSend">Gửi</button>
-    </form>
-    <div class="ai-note">AI có thể nhầm lẫn. Việc tạo đơn, thanh toán, khiếu nại vui lòng liên hệ nhân viên tại quầy.</div>
+    <button id="aiClear" class="ai-icon" type="button" title="Xóa cuộc trò chuyện" aria-label="Xóa cuộc trò chuyện">🗑</button>
+    <button id="aiClose" class="ai-icon" type="button" title="Đóng" aria-label="Đóng khung chat">✕</button>
+  </header>
+
+  <div id="aiLog" class="ai-log" aria-live="polite"></div>
+
+  <div id="aiChips" class="ai-chips">
+    <button type="button">Bảng giá giặt sấy</button>
+    <button type="button">Cách tích điểm</button>
+    <button type="button">Mẹo giặt đồ trắng</button>
+    <button type="button">Đơn của tôi đến đâu rồi?</button>
+  </div>
+
+  <form id="aiForm" class="ai-form">
+    <textarea id="aiInput" rows="1" maxlength="500" placeholder="Nhập câu hỏi..." aria-label="Câu hỏi của bạn"></textarea>
+    <button id="aiSend" type="submit" aria-label="Gửi">➤</button>
+  </form>
+  <p class="ai-note">AI có thể nhầm lẫn. Việc tạo đơn, thanh toán, khiếu nại vui lòng liên hệ nhân viên tại quầy.</p>
 </section>
+
+<style>
+:root { --ai: #0f766e; --ai-dark: #0b4f4a; --ai-soft: #ecfdf5; --ai-line: #e5e7eb; }
+.ai-fab { position: fixed; right: 20px; bottom: 20px; z-index: 999; display: flex; gap: 8px; align-items: center; padding: 12px 18px; border: 0; border-radius: 999px; color: #fff; background: var(--ai); font: 600 14px/1 inherit; cursor: pointer; box-shadow: 0 8px 22px rgba(15,118,110,.35); transition: transform .2s, background .2s; }
+.ai-fab:hover { background: var(--ai-dark); transform: translateY(-2px); }
+.ai-fab[hidden] { display: none; }
+.ai-panel { position: fixed; right: 20px; bottom: 20px; z-index: 1000; width: 380px; max-width: calc(100vw - 24px); height: 560px; max-height: calc(100vh - 40px); display: flex; flex-direction: column; overflow: hidden; background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.25); transform-origin: bottom right; animation: aiPop .22s ease-out; }
+.ai-panel[hidden] { display: none; }
+@keyframes aiPop { from { opacity: 0; transform: scale(.94) translateY(10px); } to { opacity: 1; transform: none; } }
+.ai-head { display: flex; align-items: center; gap: 10px; padding: 14px; color: #fff; background: var(--ai); }
+.ai-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,.18); display: grid; place-items: center; font-size: 20px; }
+.ai-title { flex: 1; display: flex; flex-direction: column; line-height: 1.3; }
+.ai-title small { opacity: .9; font-size: 11.5px; display: flex; align-items: center; gap: 6px; }
+.ai-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; display: inline-block; }
+.ai-icon { border: 0; background: rgba(255,255,255,.15); color: #fff; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; }
+.ai-icon:hover { background: rgba(255,255,255,.3); }
+.ai-log { flex: 1; overflow-y: auto; padding: 16px 14px; background: #f6f8f8; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
+.ai-msg { max-width: 84%; padding: 10px 13px; font-size: 14px; line-height: 1.5; border-radius: 14px; overflow-wrap: anywhere; }
+.ai-msg.bot { align-self: flex-start; background: #fff; color: #1f2937; border: 1px solid var(--ai-line); border-bottom-left-radius: 4px; }
+.ai-msg.user { align-self: flex-end; color: #fff; background: var(--ai); border-bottom-right-radius: 4px; }
+.ai-msg.error { align-self: flex-start; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-bottom-left-radius: 4px; }
+.ai-msg.error button { display: block; margin-top: 6px; border: 0; background: #991b1b; color: #fff; padding: 5px 12px; border-radius: 999px; cursor: pointer; font-size: 12px; }
+.ai-typing { display: flex; gap: 4px; padding: 13px 14px; }
+.ai-typing i { width: 7px; height: 7px; border-radius: 50%; background: #9ca3af; animation: aiBounce 1.2s infinite; }
+.ai-typing i:nth-child(2) { animation-delay: .15s; }
+.ai-typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes aiBounce { 0%,60%,100% { transform: translateY(0); opacity: .5; } 30% { transform: translateY(-5px); opacity: 1; } }
+.ai-chips { display: flex; gap: 6px; flex-wrap: wrap; padding: 8px 12px; background: #f6f8f8; }
+.ai-chips[hidden] { display: none; }
+.ai-chips button { border: 1px solid #99f6e4; background: var(--ai-soft); color: var(--ai-dark); font-size: 12.5px; padding: 6px 11px; border-radius: 999px; cursor: pointer; transition: background .15s, color .15s; }
+.ai-chips button:hover { background: var(--ai); color: #fff; }
+.ai-form { display: flex; gap: 8px; align-items: flex-end; padding: 10px 12px; border-top: 1px solid var(--ai-line); background: #fff; }
+.ai-form textarea { flex: 1; resize: none; max-height: 96px; border: 1px solid #d1d5db; border-radius: 14px; padding: 9px 12px; font: 14px/1.4 inherit; outline: none; }
+.ai-form textarea:focus { border-color: var(--ai); box-shadow: 0 0 0 3px rgba(15,118,110,.15); }
+.ai-form button { width: 40px; height: 40px; border: 0; border-radius: 50%; color: #fff; background: var(--ai); cursor: pointer; font-size: 15px; }
+.ai-form button:disabled { background: #9ca3af; cursor: not-allowed; }
+.ai-note { margin: 0; padding: 0 14px 10px; font-size: 10.5px; color: #9ca3af; background: #fff; }
+.ai-fab:focus-visible, .ai-icon:focus-visible, .ai-chips button:focus-visible, .ai-form button:focus-visible { outline: 2px solid #0f766e; outline-offset: 2px; }
+@media (max-width: 480px) { .ai-panel { right: 8px; bottom: 8px; height: calc(100vh - 16px); max-height: none; } }
+@media (prefers-reduced-motion: reduce) { .ai-panel, .ai-typing i, .ai-fab { animation: none; transition: none; } }
+</style>
 
 <script>
 (function () {
-    var panel = document.getElementById('aiPanel'), fab = document.getElementById('aiFab');
-    var log = document.getElementById('aiLog'), form = document.getElementById('aiForm');
-    var input = document.getElementById('aiInput'), send = document.getElementById('aiSend');
-    var history = [], busy = false, started = false;
+  var $ = function (id) { return document.getElementById(id); };
+  var panel = $('aiPanel'), log = $('aiLog'), input = $('aiInput'), send = $('aiSend'), chips = $('aiChips'), toggle = $('aiToggle');
+  if (!panel) return;
 
-    function add(cls, text) {
-        var d = document.createElement('div');
-        d.className = 'ai-msg ' + cls;
-        d.textContent = text;           // textContent: không chạy HTML/JS lạ từ câu trả lời
-        log.appendChild(d); log.scrollTop = log.scrollHeight;
-        return d;
-    }
-    function start() {
-        if (started) return; started = true;
-        var name = panel.getAttribute('data-name');
-        add('bot', 'Xin chào' + (name ? ' ' + name : '') + '! Mình là trợ lý của Tiệm Giặt Là. Bạn muốn hỏi về bảng giá, cách giặt đồ hay tình trạng đơn hàng?');
-        var chips = document.createElement('div'); chips.className = 'ai-chips';
-        ['Bảng giá dịch vụ', 'Cách giặt áo lụa', 'Cách tích điểm', 'Đơn của tôi đến đâu rồi?'].forEach(function (q) {
-            var b = document.createElement('button'); b.type = 'button'; b.className = 'ai-chip'; b.textContent = q;
-            b.onclick = function () { chips.remove(); ask(q); };
-            chips.appendChild(b);
-        });
-        log.appendChild(chips);
-    }
-    function toggle(open) {
-        panel.classList.toggle('open', open); fab.setAttribute('aria-expanded', open);
-        if (open) { start(); input.focus(); }
-    }
-    fab.onclick = function () { toggle(!panel.classList.contains('open')); };
-    document.getElementById('aiClose').onclick = function () { toggle(false); };
+  var KEY = 'ai_chat_v1';
+ var TIMEOUT_MS = 40000;
+  var GREETING = 'Xin chào! Mình là trợ lý của Tiệm Giặt Là. Bạn muốn hỏi về bảng giá, cách giặt đồ hay tình trạng đơn hàng?';
+  var history = [];
+  var busy = false;
 
-    function ask(text) {
-        if (busy || !text) return;
-        busy = true; send.disabled = true;
-        add('me', text); history.push({ role: 'user', content: text });
-        var wait = add('bot', 'Đang trả lời...');
-        fetch('/ai/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-csrf-token': panel.getAttribute('data-csrf') },
-            body: JSON.stringify({ messages: history.slice(-10) })
-        }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, j: j }; }); })
-          .then(function (x) {
-              wait.remove();
-              if (x.ok && x.j.reply) { add('bot', x.j.reply); history.push({ role: 'assistant', content: x.j.reply }); }
-              else { history.pop(); add('err', x.j.error || 'Có lỗi xảy ra, vui lòng thử lại.'); }
-          })
-          .catch(function () { wait.remove(); history.pop(); add('err', 'Không kết nối được. Vui lòng kiểm tra mạng và thử lại.'); })
-          .then(function () { busy = false; send.disabled = false; input.focus(); });
-    }
-    form.onsubmit = function (e) { e.preventDefault(); var t = input.value.trim(); if (!t) return; input.value = ''; ask(t); };
+  function csrf() {
+    return panel.getAttribute('data-csrf') ||
+      (document.querySelector('meta[name="csrf-token"]') || {}).content ||
+      (document.querySelector('input[name="_csrf"]') || {}).value || '';
+  }
+  function esc(s) {
+    return s.replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+  }
+  function fmt(s) {
+    return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^[-*] (.+)$/gm, '• $1').replace(/\n/g, '<br>');
+  }
+  function add(role, text) {
+    var d = document.createElement('div');
+    d.className = 'ai-msg ' + role;
+    d.innerHTML = role === 'user' ? esc(text) : fmt(text);
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
+    return d;
+  }
+  function save() {
+    try { sessionStorage.setItem(KEY, JSON.stringify(history.slice(-10))); } catch (e) {}
+  }
+  function typing() {
+    var d = document.createElement('div');
+    d.className = 'ai-msg bot ai-typing';
+    d.innerHTML = '<i></i><i></i><i></i>';
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
+    return d;
+  }
+
+  function ask(raw) {
+    var text = (raw || '').trim();
+    if (busy || !text) return;
+    busy = true; send.disabled = true; chips.hidden = true;
+
+    history.push({ role: 'user', content: text });
+    var userEl = add('user', text);
+    input.value = ''; input.style.height = 'auto';
+    var t = typing();
+
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, TIMEOUT_MS);
+
+    fetch('/ai/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf() },
+      body: JSON.stringify({ messages: history.slice(-10) }),
+      signal: ctrl.signal
+    })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { status: r.status, ok: r.ok, j: j }; }); })
+      .then(function (x) {
+        t.remove();
+        if (x.status === 429) throw new Error('Bạn hỏi nhanh quá, đợi một lát rồi thử lại nhé.');
+       if (!x.ok || !x.j.reply) throw new Error(x.j.error || x.j.message || 'Trợ lý đang bận, vui lòng thử lại.');
+        history.push({ role: 'assistant', content: x.j.reply });
+        add('bot', x.j.reply);
+        save();
+      })
+      .catch(function (e) {
+        t.remove();
+        history.pop();
+        var msg = e.name === 'AbortError' ? 'Trợ lý phản hồi quá lâu.' : (e.message || 'Không kết nối được. Vui lòng kiểm tra mạng và thử lại.');
+        var err = add('error', msg);
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = '↻ Thử lại';
+        b.onclick = function () { err.remove(); userEl.remove(); ask(text); };
+        err.appendChild(b);
+      })
+      .then(function () {
+        clearTimeout(timer);
+        busy = false; send.disabled = false; input.focus();
+      });
+  }
+
+  function restore() {
+    log.innerHTML = '';
+    add('bot', GREETING);
+    try { history = JSON.parse(sessionStorage.getItem(KEY) || '[]'); } catch (e) { history = []; }
+    history.forEach(function (m) { add(m.role === 'user' ? 'user' : 'bot', m.content); });
+    chips.hidden = history.length > 0;
+  }
+
+  toggle.addEventListener('click', function () { panel.hidden = false; toggle.hidden = true; input.focus(); log.scrollTop = log.scrollHeight; });
+  $('aiClose').addEventListener('click', function () { panel.hidden = true; toggle.hidden = false; });
+  $('aiClear').addEventListener('click', function () { history = []; save(); restore(); chips.hidden = false; });
+  chips.addEventListener('click', function (e) { if (e.target.tagName === 'BUTTON') ask(e.target.textContent); });
+  $('aiForm').addEventListener('submit', function (e) { e.preventDefault(); ask(input.value); });
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(input.value); }
+  });
+  input.addEventListener('input', function () {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 96) + 'px';
+  });
+
+  restore();
 })();
 </script>

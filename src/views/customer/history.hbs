@@ -5,49 +5,149 @@
     </div>
 </div>
 
-<div class="card flush">
-    {{#if orders.length}}
-    <div class="table-wrap">
-        <table>
-            <thead>
-                <tr>
-                    <th>Mã đơn</th>
-                    <th>Ngày nhận</th>
-                    <th>Ngày trả</th>
-                    <th>Trạng thái</th>
-                    <th class="num">Tổng tiền</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#each orders}}
-                <tr>
-                    <td class="mono">{{this.code}}</td>
-                    <td>{{dateFormat this.receivedDate}}</td>
-                    <td>{{#if this.returnDate}}{{dateFormat this.returnDate}}{{else}}—{{/if}}</td>
-                    <td><span class="status-badge {{statusClass this.status}}">{{statusLabel this.status}}</span></td>
-                    <td class="num">{{formatPrice this.totalAmount}}</td>
-                    <td class="text-right"><a href="/orders/invoice/{{this._id}}">Xem hóa đơn</a></td>
-                </tr>
-                {{/each}}
-            </tbody>
-        </table>
-    </div>
+{{#if orders.length}}
 
-    {{#if totalPages}}
-    <div class="pagination">
-        {{#if hasPrev}}<a href="/me/history?page={{prevPage}}">&laquo; Trước</a>{{/if}}
-        <span>Trang {{currentPage}} / {{totalPages}}</span>
-        {{#if hasNext}}<a href="/me/history?page={{nextPage}}">Sau &raquo;</a>{{/if}}
-    </div>
-    {{/if}}
+<div class="profile-stats">
+    <div class="stat"><div class="stat-label">Tổng số đơn</div><div class="stat-value" id="st-count">0</div></div>
+    <div class="stat ok"><div class="stat-label">Tổng tiền đã chi</div><div class="stat-value" id="st-spent">0đ</div></div>
+    <div class="stat warn"><div class="stat-label">Đang xử lý</div><div class="stat-value" id="st-active">0</div></div>
+</div>
 
-    {{else}}
+<div class="pickup-banner" id="pickup-banner" hidden>
+    <span id="pickup-banner-text"></span>
+</div>
+
+<div class="tabs tabs-filter" id="order-tabs">
+    <a href="#" class="active" data-filter="all">Tất cả <span class="tab-n" data-n="all"></span></a>
+    <a href="#" data-filter="active">Đang xử lý <span class="tab-n" data-n="active"></span></a>
+    <a href="#" data-filter="ready">Chờ lấy <span class="tab-n" data-n="ready"></span></a>
+    <a href="#" data-filter="done">Đã giao <span class="tab-n" data-n="done"></span></a>
+    <a href="#" data-filter="cancel">Đã hủy <span class="tab-n" data-n="cancel"></span></a>
+</div>
+
+<div class="order-list" id="orders">
+    {{#each orders}}
+    <article class="order-card {{statusClass this.status}}" data-class="{{statusClass this.status}}" data-total="{{this.totalAmount}}">
+        <div class="order-main">
+            <div class="order-top">
+                <span class="mono order-code">{{this.code}}</span>
+                <span class="status-badge {{statusClass this.status}}">{{statusLabel this.status}}</span>
+            </div>
+            <div class="order-dates">
+                <span>Nhận: <b>{{dateFormat this.receivedDate}}</b></span>
+                <span>Trả: <b>{{#if this.returnDate}}{{dateFormat this.returnDate}}{{else}}—{{/if}}</b></span>
+            </div>
+        </div>
+
+        <div class="order-side">
+            <div class="order-total">{{formatPrice this.totalAmount}}</div>
+            <a href="/orders/invoice/{{this._id}}" class="btn btn-secondary btn-sm">Xem hóa đơn</a>
+        </div>
+
+        <div class="progress-steps">
+            <div class="ps">Chờ giặt</div>
+            <div class="ps">Đang giặt</div>
+            <div class="ps">Đã xong</div>
+            <div class="ps">Đã giao</div>
+        </div>
+
+        <div class="pickup-zone">
+            <div class="pickup-info">
+                <b>Đồ của bạn đã giặt xong, chưa lấy</b>
+                {{#if this.returnDate}}<span class="countdown" data-due="{{this.returnDate}}"></span>{{/if}}
+            </div>
+            <form action="/me/history/{{this._id}}/pickup" method="POST" onsubmit="return confirm('Xác nhận bạn đã nhận đủ đồ?')">
+                {{> csrf}}
+                <button type="submit" class="btn btn-pickup">Xác nhận đã lấy</button>
+            </form>
+        </div>
+    </article>
+    {{/each}}
+</div>
+
+{{#if totalPages}}
+<div class="pagination">
+    {{#if hasPrev}}<a href="/me/history?page={{prevPage}}">&laquo; Trước</a>{{/if}}
+    <span>Trang {{currentPage}} / {{totalPages}}</span>
+    {{#if hasNext}}<a href="/me/history?page={{nextPage}}">Sau &raquo;</a>{{/if}}
+</div>
+{{/if}}
+
+{{else}}
+<div class="card">
     <div class="empty-state">
         Bạn chưa có đơn giặt nào.
         <small>Đơn hàng sẽ xuất hiện tại đây sau khi tiệm lập đơn cho bạn.</small>
     </div>
-    {{/if}}
 </div>
+{{/if}}
 
 <a href="/me/profile" class="back-link">&larr; Quay lại hồ sơ</a>
+
+<script>
+(function () {
+    function pad(n) { return String(n).padStart(2, '0'); }
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.order-card'));
+    if (!cards.length) return;
+
+    var groups = {
+        active: ['status-cho-giat', 'status-dang-giat'],
+        ready: ['status-da-xong'],
+        done: ['status-da-giao'],
+        cancel: ['status-da-huy']
+    };
+    function groupOf(c) {
+        var k = c.dataset.class;
+        return Object.keys(groups).filter(function (g) { return groups[g].indexOf(k) > -1; })[0];
+    }
+
+    /* Thống kê + số đơn trên tab (tính trên các đơn đang hiển thị ở trang này) */
+    var counts = { all: cards.length, active: 0, ready: 0, done: 0, cancel: 0 };
+    var spent = 0;
+    cards.forEach(function (c) {
+        var g = groupOf(c);
+        if (g) counts[g]++;
+        if (g !== 'cancel') spent += Number(c.dataset.total) || 0;
+    });
+    document.getElementById('st-count').textContent = counts.all;
+    document.getElementById('st-spent').textContent = spent.toLocaleString('vi-VN') + 'đ';
+    document.getElementById('st-active').textContent = counts.active + counts.ready;
+    document.querySelectorAll('.tab-n').forEach(function (el) { el.textContent = counts[el.dataset.n]; });
+
+    if (counts.ready) {
+        document.getElementById('pickup-banner-text').textContent = 'Bạn có ' + counts.ready + ' đơn đã giặt xong, chưa lấy đồ.';
+        document.getElementById('pickup-banner').hidden = false;
+    }
+
+    /* Lọc theo tab */
+    document.querySelectorAll('#order-tabs a').forEach(function (tab) {
+        tab.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelectorAll('#order-tabs a').forEach(function (t) { t.classList.remove('active'); });
+            tab.classList.add('active');
+            var f = tab.dataset.filter;
+            cards.forEach(function (c) { c.hidden = !(f === 'all' || groupOf(c) === f); });
+        });
+    });
+
+    /* Đồng hồ đếm ngược */
+    function dueTime(el) {
+        var d = new Date(el.dataset.due);
+        if (d.getHours() === 0 && d.getMinutes() === 0) d.setHours(23, 59, 59, 999);
+        return d.getTime();
+    }
+    function tick() {
+        document.querySelectorAll('.countdown[data-due]').forEach(function (el) {
+            var diff = dueTime(el) - Date.now();
+            var late = diff < 0;
+            var s = Math.floor(Math.abs(diff) / 1000);
+            var d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
+            el.textContent = (late ? 'Quá hạn ' : 'Còn ') + (d ? d + ' ngày ' : '') + pad(h) + ':' + pad(m) + ':' + pad(s % 60);
+            el.classList.toggle('late', late);
+            el.classList.toggle('soon', !late && diff < 3 * 3600000);
+        });
+    }
+    tick();
+    setInterval(tick, 1000);
+})();
+</script>

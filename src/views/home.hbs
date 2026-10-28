@@ -1,4 +1,7 @@
-{{!-- Trang chủ --}}
+
+
+<div class="hm">
+
 <section class="hero">
     <div>
         <span class="hero-tag">Hệ thống quản lý tiệm giặt là</span>
@@ -23,6 +26,12 @@
                 <a href="/auth/login" class="btn btn-secondary btn-lg">Đăng nhập</a>
             {{/if}}
         </div>
+
+        <ul class="hm-badges">
+            <li>Tính tiền tự động</li>
+            <li>Theo dõi trạng thái</li>
+            <li>Tích điểm thành viên</li>
+        </ul>
     </div>
 
     <div class="card flush price-card" id="bang-gia">
@@ -35,6 +44,15 @@
             </tbody>
         </table>
         <div class="note">{{#if isStaff}}Chọn một dịch vụ để mở sẵn trong form tạo đơn.{{else}}Mang đồ đến tiệm để nhân viên lập đơn và báo giá chính xác.{{/if}}</div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="hm-perks">
+        <div class="hm-perk"><b>Nhanh gọn</b><span>Lập đơn và in hóa đơn trong vài thao tác.</span></div>
+        <div class="hm-perk"><b>Minh bạch</b><span>Giá niêm yết rõ ràng, tính tiền tự động.</span></div>
+        <div class="hm-perk"><b>Theo dõi được</b><span>Biết đơn đang ở bước nào bất cứ lúc nào.</span></div>
+        <div class="hm-perk"><b>Có ưu đãi</b><span>Tích điểm và lên hạng thành viên.</span></div>
     </div>
 </section>
 
@@ -64,6 +82,27 @@
 </section>
 
 <section class="section">
+    <div class="hm-cta">
+        <div>
+            <h2>{{#if currentCustomer}}Sẵn sàng cho đơn giặt tiếp theo?{{else}}Tham gia để tích điểm và theo dõi đơn giặt{{/if}}</h2>
+            <p>{{#if currentCustomer}}{{#if isStaff}}Tạo đơn mới chỉ mất vài giây.{{else}}Xem lại các đơn đã gửi và điểm tích lũy của bạn.{{/if}}{{else}}Đăng ký miễn phí để xem lịch sử giặt, hạng thành viên và trạng thái từng đơn.{{/if}}</p>
+        </div>
+        <div class="hm-cta-actions">
+            {{#if currentCustomer}}
+                {{#if isStaff}}
+                    <a href="/orders/create" class="btn btn-primary btn-lg">Tạo đơn hàng</a>
+                {{else}}
+                    <a href="/me/profile" class="btn btn-primary btn-lg">Xem hồ sơ &amp; điểm</a>
+                {{/if}}
+            {{else}}
+                <a href="/auth/register" class="btn btn-primary btn-lg">Đăng ký ngay</a>
+                <a href="/auth/login" class="btn btn-secondary btn-lg">Đăng nhập</a>
+            {{/if}}
+        </div>
+    </div>
+</section>
+
+<section class="section">
     <div class="section-head">
         <div class="eyebrow">Tư vấn</div>
         <h2>Mẹo giặt giũ hữu ích</h2>
@@ -75,3 +114,26 @@
         <a href="/tips/ao-trang"><span><span class="cat">Tẩy vết bẩn</span>Tip đánh bay các vết bẩn trên áo trắng đơn giản tại nhà</span>{{> icon name="arrow"}}</a>
     </div>
 </section>
+
+<section class="section">
+    <div class="section-head">
+        <div class="eyebrow">Hỏi đáp</div>
+        <h2>Câu hỏi thường gặp</h2>
+    </div>
+    <div class="hm-faq">
+        <details>
+            <summary>Tôi theo dõi đơn giặt của mình ở đâu?</summary>
+            <p>Đăng nhập rồi vào mục "Lịch sử giặt" để xem toàn bộ đơn và trạng thái: Chờ giặt, Đang giặt, Đã xong, Đã giao.</p>
+        </details>
+        <details>
+            <summary>Giá được tính như thế nào?</summary>
+            <p>Mỗi dịch vụ có đơn giá riêng theo kg, món, cái hoặc đôi như trong bảng giá. Hệ thống tự tính tổng tiền khi nhân viên lập đơn.</p>
+        </details>
+        <details>
+            <summary>Điểm thành viên dùng để làm gì?</summary>
+            <p>Mỗi đơn hoàn tất sẽ được tích điểm vào hồ sơ. Xem điểm và hạng thành viên ở mục "Hồ sơ".</p>
+        </details>
+    </div>
+</section>
+
+</div>
