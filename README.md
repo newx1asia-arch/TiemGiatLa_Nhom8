@@ -3,6 +3,7 @@
 **Đề tài 16 – Nhóm 8**  
 **Chủ đề trọng tâm:** Vòng đời đơn hàng (Chờ giặt → Đang giặt → Đã xong → Đã giao) & Thanh toán (Thẻ trả trước, Điểm thưởng)  
 **Tài liệu cơ sở:** [DacTa.md](docs/DacTa.md) và [README.md](README.md) (yêu cầu đề bài)  
+**Giải thích cách hoạt động (10 file):** [API Design/01-tong-quan-he-thong.md](API%20Design/01-tong-quan-he-thong.md)  
 **Phiên bản:** 1.0  
 **Ngày lập:** 16/10/2026  
 
